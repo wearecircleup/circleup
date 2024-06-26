@@ -335,7 +335,8 @@ def send_to_claude():
 
 
 def write_pensum():
-    pensum_form()
+    with st.form('form_pensum'):
+        pensum_form()
     button_layout = st.columns([3,1,2])
     button_layout[0].button(label='Pensum Review',type="primary",on_click=validate_proposal_input,disabled=st.session_state.pensum_fields_validation,use_container_width=True)
     button_layout[2].button(label='Anthropic Review',type="primary",on_click=send_to_claude,disabled=st.session_state.pensum_anthropic_review,use_container_width=True)
@@ -359,7 +360,6 @@ def claude_layout():
 menu()
 
 try:
-
     # pensum_assessment = {
     # "Claridad": (4, "La idea general es clara, pero algunos términos podrían ser más específicos. ¿Podrías definir 'enfoque holístico'? ¿Cómo se relaciona esto con los objetivos del curso?"),
     # "Relevancia": (5, "El tema es muy relevante para la audiencia objetivo y aborda una necesidad actual. ¿Qué datos o estudios respaldan esta relevancia? ¿Cómo se alinea con las tendencias del mercado?"),
