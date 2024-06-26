@@ -4,5 +4,3 @@ google-cloud-firestore
 anthropic
 langchain
 langchain-anthropic
-email==4.0.1
-wheel
