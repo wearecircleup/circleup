@@ -335,8 +335,7 @@ def send_to_claude():
 
 
 def write_pensum():
-    with st.form('form_pensum'):
-        pensum_form()
+    pensum_form()
     button_layout = st.columns([3,1,2])
     button_layout[0].button(label='Pensum Review',type="primary",on_click=validate_proposal_input,disabled=st.session_state.pensum_fields_validation,use_container_width=True)
     button_layout[2].button(label='Anthropic Review',type="primary",on_click=send_to_claude,disabled=st.session_state.pensum_anthropic_review,use_container_width=True)
