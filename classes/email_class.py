@@ -30,7 +30,7 @@ class Email:
 
     def send_pensum(self,recipient, data,user_name,proposal, max_retries=3, retry_delay=5):
         
-        file_name = f'{user_name.lower()}-anthropic | {datetime.datetime.today().strftime('%d-%m-%Y')}.txt'
+        file_name = f"PENSUM |{user_name.upper()}-anthropic | {datetime.datetime.today().strftime('%Y-%m-%d')}.txt"
 
         message = MIMEMultipart("alternative")
         message["Subject"] = 'Evaluación de Pensum @Circle Up'
