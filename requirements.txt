@@ -1,0 +1,9 @@
+streamlit
+pandas
+google-cloud-firestore
+plotly
+anthropic
+langchain
+langchain-anthropic
+email
+email_service
