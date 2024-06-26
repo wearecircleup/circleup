@@ -13,7 +13,6 @@ import time
 import anthropic
 from classes.anthropic_agent import evaluate_proposal_langchain
 from classes.email_class import Email
-import plotly.graph_objects as go
 
 
 st.set_page_config(
