@@ -87,15 +87,17 @@ def firestore_client():
     db = firestore.Client.from_service_account_info(key_firestore)
     return db
 
+@st.cache_data(show_spinner=False)
+def catch_user(cls_role,email,password,connection):
+    intance = cls_role()
+    intance.user_authentication(email,password,connection)
+    if any(asdict(intance).values()):
+        st.toast('¡Validación exitosa!', icon='🎉')
+        return intance
+
 def login_setup(cls_role,email,password,connection):
     if email and password:
-        intance = cls_role()
-        intance.user_authentication(email,password,connection)
-        if any(asdict(intance).values()):
-            st.toast('¡Validación exitosa!', icon='🎉')
-            st.session_state.user_auth = intance       
-        else:
-            warning_login_failed(st.session_state._email_entered,st.session_state._password_entered) 
+        st.session_state.user_auth = catch_user(cls_role,email,password,connection)
     else:
         warning_login_failed(st.session_state._email_entered,st.session_state._password_entered)
 
