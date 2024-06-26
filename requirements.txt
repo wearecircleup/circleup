@@ -5,6 +5,6 @@ plotly
 anthropic
 langchain
 langchain-anthropic
-email>=3.2.0,<3.3.dev0  --pre
+email>=3.2.0,<3.3.dev0  
 email_service
 
