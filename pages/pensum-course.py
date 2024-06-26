@@ -380,7 +380,7 @@ try:
 
     st.audio('./gallery/pensum_guide.mp3',format='audio/mpeg')
 
-    with st.expander('Escribe tu pensum aquí',expanded=st.session_state.expander_pensum):
+    with st.expander('Escribe tu pensum aquí',expanded=True):
         write_pensum()
 
     st.divider()
@@ -391,7 +391,7 @@ try:
     Ahora es el momento de lanzar las preguntas clave para determinar qué tan buena es tu idea y qué necesita para mejorar. Para esto, {st.session_state.user_auth.first_name.capitalize()}, contaremos con la ayuda del último modelo de inteligencia artificial de Anthropic: Claude Sonnet 3.5. Claude evaluará tu propuesta en aspectos críticos como claridad, relevancia, viabilidad, impacto, título, objetivos, idea, actividades y metodología. Después de la evaluación de Claude, revisaremos juntos los resultados y trabajaremos en las sugerencias.
     """)
 
-    with st.expander('Ver evaluación de Claude',expanded=st.session_state.expander_claude):
+    with st.expander('Ver evaluación de Claude',expanded=True):
         claude_layout()
         st.button('Enviar Backup',key='_email_pensum',on_click=send_email_pensum,args=[st.session_state.catche_claude],disabled=st.session_state.send_email_button,type='primary',use_container_width=True)
 
