@@ -56,6 +56,7 @@ def data_anthropic(proposal):
     if proposal is not None:    
         # claude_review = Rubric().evaluate_proposal(proposal,anthropic_client())
         claude_review = evaluate_proposal_langchain(proposal,anthropic_client())
+        st.session_state.send_email_button = False
         return claude_review
 
 
