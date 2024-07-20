@@ -1,0 +1,14 @@
+
+[theme]
+base = "light"
+primaryColor="#25c19f"
+backgroundColor="#2b3137"
+secondaryBackgroundColor="#586e75"
+textColor="#fafafa"
+font="monospace"
+
+[client]
+showSidebarNavigation = false
+
+
+
