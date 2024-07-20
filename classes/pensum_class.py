@@ -34,10 +34,11 @@ class PensumLoader:
 
     @staticmethod
     def sheet_to_dict(sheet):
-        return '\n'.join(
-            f"{key.replace('\\n', '').lower()}: {value}"
-            for key, value in sheet.set_index('General Pensum')['Respuesta'].to_dict().items()
-        )
+        result = []
+        for key, value in sheet.set_index('General Pensum')['Respuesta'].to_dict().items():
+            cleaned_key = key.replace('\n', '').lower()
+            result.append(f"{cleaned_key}: {value}")
+        return '\n'.join(result)
 
     def load_sheets(self, sheet_name):
         sheet = self.load_sheet(self.file, sheet_name)
