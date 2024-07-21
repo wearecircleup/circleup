@@ -13,8 +13,9 @@ import re
 import gspread
 from google.oauth2.credentials import Credentials
 from google.oauth2 import service_account
-from googleapiclient.discovery import build
-import requests
+
+from datetime import datetime
+
 
 st.set_page_config(
     page_title="Circle Up",
@@ -148,8 +149,6 @@ def format_markdown_output(markdown_output):
     return output1, output2
 
 menu()
-
-from datetime import datetime
 
 def age_to_category(birth_date_str: str) -> str:
     """

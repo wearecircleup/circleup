@@ -14,6 +14,13 @@ import time
 from classes.learner_class import Learner
 from classes.volunteer_class import Volunteer
 from classes.admin_class import Admin
+import gspread
+from google.oauth2.credentials import Credentials
+from google.oauth2 import service_account
+from typing import List
+
+from datetime import datetime
+
 
 st.set_page_config(
     page_title="Circle Up",
@@ -27,6 +34,8 @@ def firestore_client():
     key_firestore = json.loads(st.secrets["textkey"])
     db = firestore.Client.from_service_account_info(key_firestore)
     return db
+
+
 
 def form_reponses():
     form_users_class = {
@@ -59,15 +68,90 @@ def form_reponses():
 
     return form_users_class
 
-def signup_submition(cls_name,form):
+def age_to_category(birth_date_str: str) -> str:
+    """
+    Convierte una fecha de nacimiento a una categoría de edad.
+    
+    :param birth_date_str: Fecha de nacimiento en formato "DD-MM-YYYY"
+    :return: Categoría de edad como string
+    """
+    birth_date = datetime.strptime(birth_date_str, "%d-%m-%Y")
+    today = datetime.now()
+    age = today.year - birth_date.year
+
+    if today.month < birth_date.month or (today.month == birth_date.month and today.day < birth_date.day):
+        age -= 1
+
+    categories = ["0-4", "5-9", "10-14", "15-19", "20-24","25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60+"]
+    
+    if age >= 60:
+        return "60+"
+    for category in categories:
+        start, end = map(int, category.split("-"))
+        if start <= age <= end:
+            return category
+    
+    return "NoT Found"
+
+
+@st.cache_data(ttl=3600)
+def send_to_sheets(data: List[List[str]]):
+    """
+    Envía los datos a Google Sheets, añadiéndolos al final de la hoja existente.
+    :param data: Lista de listas, donde cada lista interna representa una fila de datos
+    """
+    try:
+        key_sheets = json.loads(st.secrets["sheetskey"])
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        
+        creds = service_account.Credentials.from_service_account_info(key_sheets, scopes=scope)
+        client = gspread.authorize(creds)
+        sheet = client.open_by_key('1lAPcVR3e7MqUJDt2ys25eRY7ozu5HV61ZhWFYuMULOM').sheet1
+
+        num_rows = len(sheet.get_all_values())
+        
+        for row in data:
+            num_rows += 1
+            sheet.insert_row(row, num_rows)
+        
+        return True
+    except Exception as e:
+        st.error(f"Lo siento, ha ocurrido un error al enviar los datos: {str(e)}")
+        return False
+
+
+def prepare_sheets_data(instance_data):
+    """
+    Prepara los datos específicos para enviar a Google Sheets.
+    """
+    return [
+        instance_data.get('first_name', ''),
+        instance_data.get('last_name', ''),
+        age_to_category(instance_data.get('dob', '')),
+        instance_data.get('email', ''),
+        instance_data.get('phone_number', ''),
+        instance_data.get('user_role', ''),
+        instance_data.get('city_residence', ''),
+        ', '.join(instance_data.get('topics_interest', [])),
+        ', '.join(instance_data.get('how_to_learn', []))
+    ]
+
+
+def signup_submition(cls_name, form):
     instance = cls_name(**form)
     conn = firestore_client()
-    is_user_auth = instance.signup_authentication(instance.email,instance.id_user,instance.phone_number,conn)
+    is_user_auth = instance.signup_authentication(instance.email, instance.id_user, instance.phone_number, conn)
 
     if is_user_auth['status'] != 'sigup_approved':
         warning_signup_failed(is_user_auth)
-    else:        
-        instance.successful_signup(asdict(instance),conn)
+    else:
+        instance_data = asdict(instance)
+        instance.successful_signup(instance_data, conn)
+        
+        # Preparar y enviar datos a Google Sheets
+        sheets_data = prepare_sheets_data(instance_data)
+        send_to_sheets([sheets_data])  # Envolvemos sheets_data en una lista ya que send_to_sheets espera una lista de listas
+        
         st.toast('¡Hip!')
         time.sleep(.5)
         st.toast('¡Hip!')
