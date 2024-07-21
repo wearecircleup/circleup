@@ -109,19 +109,15 @@ class Users:
         #         """
         #         return connection.collection('users_collection').add(data)
 
-        @staticmethod
         def successful_signup(data, connection):
                 """
                 Upload Profile Attributes On Firestore (Sign Up) and Update cloud_id
                 """
-                doc_ref = connection.collection('users_collection').add(data)
-                cloud_id = doc_ref[1].id
-        
-                doc_ref[1].update({'cloud_id': cloud_id})
-                temp_user = Users()
-                temp_user.update_profile(**data, cloud_id=cloud_id)
+                doc_ref, doc = connection.collection('users_collection').add(data)
+                cloud_id = doc.id
+                doc.reference.update({'cloud_id': cloud_id})
                 
-                return temp_user
+                return doc_ref, doc
 
 
         def update_firestore_profile(self,connection):
