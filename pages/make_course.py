@@ -14,6 +14,7 @@ import gspread
 from google.oauth2.credentials import Credentials
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+import requests
 
 st.set_page_config(
     page_title="Circle Up",
@@ -130,7 +131,7 @@ def send_to_sheets(data: List[List[str]]):
         key_sheets = json.loads(st.secrets["sheetskey"])
         scope = ['https://spreadsheets.google.com/feeds', 
                  'https://www.googleapis.com/auth/drive',
-                 'https://www.googleapis.com/auth/script.projects']  # Añadido el scope para Apps Script
+                 'https://www.googleapis.com/auth/script.external_request']  # Cambiado el scope para Apps Script
 
         creds = service_account.Credentials.from_service_account_info(key_sheets, scopes=scope)
         
@@ -145,21 +146,23 @@ def send_to_sheets(data: List[List[str]]):
             sheet.insert_row(row, num_rows)
         
         # Ejecutar el script de Apps Script
-        service = build('script', 'v1', credentials=creds)
+        DEPLOYMENT_ID = 'AKfycbyTH6bNOdbA_O0O2mAlf4yHt3SSOcRsR8vdIeQbYQEPkYWX1ECK9jklXLyPgRY3BJM'
+        url = f"https://script.googleapis.com/v1/scripts/{DEPLOYMENT_ID}:run"
         
-        # ID de tu proyecto de Apps Script
-        SCRIPT_ID = '1_8qaBl9DsV8e15m2rIvE_lsbxcFbR0vk3dtZwgsLoWlqcOSWKktlvKga'
+        headers = {
+            "Authorization": f"Bearer {creds.token}",
+            "Content-Type": "application/json"
+        }
         
-        # Ejecutar el script
-        request = service.scripts().run(body={
-            'function': 'createPersonalizedSlides',
-            'parameters': []  # Añade parámetros aquí si tu función los requiere
-        }, scriptId=SCRIPT_ID)
+        body = {
+            "function": "createPersonalizedSlides",
+            "parameters": []  # Añade parámetros aquí si tu función los requiere
+        }
         
-        response = request.execute()
+        response = requests.post(url, headers=headers, json=body)
         
-        if 'error' in response:
-            st.error(f"Los datos se enviaron correctamente, pero hubo un error al ejecutar el script: {response['error']['message']}")
+        if response.status_code != 200:
+            st.error(f"Los datos se enviaron correctamente, pero hubo un error al ejecutar el script: {response.text}")
         else:
             st.success("Los datos se enviaron correctamente y el script se ejecutó con éxito.")
         
