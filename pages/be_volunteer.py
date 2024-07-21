@@ -2,7 +2,7 @@ import json
 import streamlit as st
 from menu import menu
 import pandas as pd
-from utils.body import (html_banner)
+from utils.body import html_banner
 from google.cloud import firestore
 from classes.firestore_class import Firestore
 from utils.form_options import careers, volunteer_level
@@ -33,6 +33,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
+st.html(html_banner)
 
 @st.cache_resource
 def firestore_client():
@@ -41,21 +42,29 @@ def firestore_client():
     return db
 
 @st.cache_data
-def status_user():
+def check_user_request_status(user_id):
     firestore = Firestore(firestore_client())
-    doc_id = st.session_state.user_auth.cloud_id
-    if firestore.document_exists("volunteer_request", doc_id):
-        return True
-    
+    return firestore.document_exists("volunteer_request", user_id)
+
+def validate_form():
+    for key in st.session_state:
+        if key.startswith('volunteer_') and not st.session_state[key]:
+            return False
+    return True
+
+def validate_user_status():
+    return (st.session_state.user_auth.user_status != 'Inactive' and 
+            st.session_state.user_auth.user_role == "Learner")
+
+# Initialize session state
 if 'status_request' not in st.session_state:
-    st.session_state.status_request = False or status_user()
+    st.session_state.status_request = check_user_request_status(st.session_state.user_auth.cloud_id)
 
 menu()
 
-if status_user():
-    st.session_state.status_request = True
+if st.session_state.status_request:
     st.warning("Ya has enviado una solicitud de voluntariado. Tu solicitud está pendiente de validación. Por favor, está atento a tu email para más información.")
-
+    st.stop()  # Stop execution here if the user has already submitted a request
 
 st.title("¿Te interesaría participar como voluntario?")
 
@@ -79,6 +88,7 @@ para que sean expertos en adaptarse y resolver problemas. Si la próxima generac
 norma. Tu aporte hoy puede ser la solución que alguien necesite mañana. ¿Listo para ser parte del cambio?            
 """)
 
+
 st.title("Formulario de Voluntarios")
 
 st.markdown("""
@@ -86,23 +96,13 @@ Este formulario es el primer paso como voluntario en Circle Up.
 Está diseñado para profesionales de **25 años** en adelante que deseen compartir su experiencia.
 """)
 
-def validate_form():
-    for key in st.session_state:
-        if key.startswith('volunteer_') and not st.session_state[key]:
-            return False
-    return True
-
-def validate_user_status():
-    return (st.session_state.user_auth.user_status != 'Inactive' and 
-            st.session_state.user_auth.user_role == "Learner")
-
 with st.form("volunteer_form"):
-    age = st.selectbox("Edad",options=[
+    age = st.selectbox("Edad", options=[
         "25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60+"
-    ], key="volunteer_age",index=None)
+    ], key="volunteer_age", index=None)
     
-    education = st.selectbox("Nivel educativo completado",options=volunteer_level, key="volunteer_education",index=None)
-    profession_category = st.selectbox("Categoría profesional",options=careers, key="volunteer_profession_category",index=None)
+    education = st.selectbox("Nivel educativo completado", options=volunteer_level, key="volunteer_education", index=None)
+    profession_category = st.selectbox("Categoría profesional", options=careers, key="volunteer_profession_category", index=None)
     experience = st.number_input("Años de experiencia profesional", min_value=1, max_value=50, key="volunteer_experience")
     
     availability = st.multiselect("Tipo de voluntariado", ["Virtual", "Presencial", "Ambos"], key="volunteer_availability")
@@ -111,52 +111,51 @@ with st.form("volunteer_form"):
         "Inmediata",
         "En 1-2 semanas",
         "En 3-4 semanas"
-    ], key="volunteer_time_availability",index=None)
+    ], key="volunteer_time_availability", index=None)
     
-    commitment = st.slider("Horas que puedes donar al mes", min_value=4, max_value=8, step=1, key="volunteer_commitment",value=4)
+    commitment = st.slider("Horas que puedes donar al mes", min_value=4, max_value=8, step=1, key="volunteer_commitment", value=4)
     motivation = st.text_area("¿Por qué quieres ser parte de Circle Up?", key="volunteer_motivation", max_chars=300)
     
-    submit_button = st.form_submit_button("Enviar Aplicación",use_container_width=True,type='primary',disabled=st.session_state.status_request)
+    submit_button = st.form_submit_button("Enviar Aplicación", use_container_width=True, type='primary')
 
 if submit_button:
     if validate_form() and validate_user_status():
-        volunteer_data = {
-            "age": st.session_state.volunteer_age,
-            "education": st.session_state.volunteer_education,
-            "profession_category": st.session_state.volunteer_profession_category,
-            "experience": st.session_state.volunteer_experience,
-            "availability": st.session_state.volunteer_availability,
-            "time_availability": st.session_state.volunteer_time_availability,
-            "commitment": st.session_state.volunteer_commitment,
-            "motivation": st.session_state.volunteer_motivation,
-            "first_name": st.session_state.user_auth.first_name,
-            "last_name": st.session_state.user_auth.last_name,
-            "email": st.session_state.user_auth.email,
-            "cloud_id": st.session_state.user_auth.cloud_id,
-            "user_status": st.session_state.user_auth.user_status,
-            "user_role": st.session_state.user_auth.user_role,
-            "status":'Pending',
-            "notification":"Pending"
-        }
+        if not st.session_state.status_request:
+            volunteer_data = {
+                "age": st.session_state.volunteer_age,
+                "education": st.session_state.volunteer_education,
+                "profession_category": st.session_state.volunteer_profession_category,
+                "experience": st.session_state.volunteer_experience,
+                "availability": st.session_state.volunteer_availability,
+                "time_availability": st.session_state.volunteer_time_availability,
+                "commitment": st.session_state.volunteer_commitment,
+                "motivation": st.session_state.volunteer_motivation,
+                "first_name": st.session_state.user_auth.first_name,
+                "last_name": st.session_state.user_auth.last_name,
+                "email": st.session_state.user_auth.email,
+                "cloud_id": st.session_state.user_auth.cloud_id,
+                "user_status": st.session_state.user_auth.user_status,
+                "user_role": st.session_state.user_auth.user_role,
+                "status": 'Pending',
+                "notification": "Pending"
+            }
 
-        try:
-            firestore = Firestore(firestore_client())
-            doc_id = st.session_state.user_auth.cloud_id
-            
-            if firestore.document_exists("volunteer_request", doc_id):
-                st.session_state.status_request = True
-                st.warning("Ya has enviado una solicitud de voluntariado. Tu solicitud está pendiente de validación. Por favor, está atento a tu email para más información.")
-            else:
+            try:
+                firestore = Firestore(firestore_client())
+                doc_id = st.session_state.user_auth.cloud_id
+                
                 doc = firestore.add_document("volunteer_request", volunteer_data, doc_id)
+                st.session_state.status_request = True
                 st.success("¡Gracias por tu aplicación! Hemos recibido tu información y la evaluaremos pronto.")
                 st.info("Si tu aplicación es aprobada, recibirás un email con los siguientes pasos.")
-        except ValueError as ve:
-            st.warning(str(ve))
-        except Exception as e:
-            st.error(f"Hubo un error al procesar tu solicitud: {str(e)}")
+            except ValueError as ve:
+                st.warning(str(ve))
+            except Exception as e:
+                st.error(f"Hubo un error al procesar tu solicitud: {str(e)}")
+        else:
+            st.warning("Ya has enviado una solicitud de voluntariado. Tu solicitud está pendiente de validación. Por favor, está atento a tu email para más información.")
     else:
         if not validate_user_status():
             st.error("Lo sentimos, solo los usuarios activos con rol de Learner pueden enviar este formulario.")
         else:
             st.error("Por favor, completa todos los campos del formulario antes de enviar.")
-
