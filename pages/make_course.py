@@ -95,79 +95,27 @@ def get_profile_summary(form_data):
 
     return profile_summary
 
-# @st.cache_data(ttl=3600)
-# def send_to_sheets(data: List[List[str]]):
-#     """
-#     Envía los datos a Google Sheets, añadiéndolos al final de la hoja existente.
-#     :param data: Lista de listas, donde cada lista interna representa una fila de datos
-#     """
-#     try:
-#         key_sheets = json.loads(st.secrets["sheetskey"])
-#         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-        
-#         creds = service_account.Credentials.from_service_account_info(key_sheets, scopes=scope)
-#         client = gspread.authorize(creds)
-#         sheet = client.open_by_key('1FzqJ-hUvIOyALFS7lXyufIF5XfcfNe6Xdvf_WdhFDw8').sheet1
-
-#         num_rows = len(sheet.get_all_values())
-        
-#         for row in data:
-#             num_rows += 1
-#             sheet.insert_row(row, num_rows)
-        
-#         return True
-#     except Exception as e:
-#         st.error(f"Lo siento, ha ocurrido un error al enviar los datos: {str(e)}")
-#         return False
-
 @st.cache_data(ttl=3600)
 def send_to_sheets(data: List[List[str]]):
     """
-    Envía los datos a Google Sheets, añadiéndolos al final de la hoja existente,
-    y luego ejecuta un script de Apps Script.
+    Envía los datos a Google Sheets, añadiéndolos al final de la hoja existente.
     :param data: Lista de listas, donde cada lista interna representa una fila de datos
     """
     try:
         key_sheets = json.loads(st.secrets["sheetskey"])
-        scope = ['https://spreadsheets.google.com/feeds', 
-                 'https://www.googleapis.com/auth/drive',
-                 'https://www.googleapis.com/auth/script.external_request']  # Cambiado el scope para Apps Script
-
-        creds = service_account.Credentials.from_service_account_info(key_sheets, scopes=scope)
+        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
         
-        # Enviar datos a Google Sheets
+        creds = service_account.Credentials.from_service_account_info(key_sheets, scopes=scope)
         client = gspread.authorize(creds)
         sheet = client.open_by_key('1FzqJ-hUvIOyALFS7lXyufIF5XfcfNe6Xdvf_WdhFDw8').sheet1
-        
+
         num_rows = len(sheet.get_all_values())
         
         for row in data:
             num_rows += 1
             sheet.insert_row(row, num_rows)
         
-        # Ejecutar el script de Apps Script
-        DEPLOYMENT_ID = 'AKfycbyTH6bNOdbA_O0O2mAlf4yHt3SSOcRsR8vdIeQbYQEPkYWX1ECK9jklXLyPgRY3BJM'
-        url = f"https://script.googleapis.com/v1/scripts/{DEPLOYMENT_ID}:run"
-        
-        headers = {
-            "Authorization": f"Bearer {creds.token}",
-            "Content-Type": "application/json"
-        }
-        
-        body = {
-            "function": "createPersonalizedSlides",
-            "parameters": []  # Añade parámetros aquí si tu función los requiere
-        }
-        
-        response = requests.post(url, headers=headers, json=body)
-        
-        if response.status_code != 200:
-            st.error(f"Los datos se enviaron correctamente, pero hubo un error al ejecutar el script: {response.text}")
-        else:
-            st.success("Los datos se enviaron correctamente y el script se ejecutó con éxito.")
-        
         return True
-    
     except Exception as e:
         st.error(f"Lo siento, ha ocurrido un error al enviar los datos: {str(e)}")
         return False
