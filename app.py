@@ -88,8 +88,6 @@ def firestore_client():
     db = firestore.Client.from_service_account_info(key_firestore)
     return db
 
-
-
 def login_setup(cls_role,email,password,connection):
     if email and password:
         intance = cls_role()

@@ -34,11 +34,6 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-if 'status_request' not in st.session_state:
-    st.session_state.status_request = False
-
-st.html(html_banner)
-
 @st.cache_resource
 def firestore_client():
     key_firestore = json.loads(st.secrets["textkey"])
@@ -52,6 +47,8 @@ def status_user():
     if firestore.document_exists("volunteer_request", doc_id):
         return True
     
+if 'status_request' not in st.session_state:
+    st.session_state.status_request = False or status_user()
 
 menu()
 

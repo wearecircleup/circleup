@@ -102,12 +102,27 @@ class Users:
                 except IndexError as e:
                         return {'status':'sigup_approved'}
         
+        # @staticmethod
+        # def successful_signup(data,connection):
+        #         """
+        #         Upload Profile Atributes On Firestore (Sign Up)
+        #         """
+        #         return connection.collection('users_collection').add(data)
+
         @staticmethod
-        def successful_signup(data,connection):
+        def successful_signup(data, connection):
                 """
-                Upload Profile Atributes On Firestore (Sign Up)
+                Upload Profile Attributes On Firestore (Sign Up) and Update cloud_id
                 """
-                return connection.collection('users_collection').add(data)
+                doc_ref = connection.collection('users_collection').add(data)
+                cloud_id = doc_ref[1].id
+        
+                doc_ref[1].update({'cloud_id': cloud_id})
+                temp_user = Users()
+                temp_user.update_profile(**data, cloud_id=cloud_id)
+                
+                return temp_user
+
 
         def update_firestore_profile(self,connection):
                 """

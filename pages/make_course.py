@@ -13,6 +13,7 @@ import re
 import gspread
 from google.oauth2.credentials import Credentials
 from google.oauth2 import service_account
+from googleapiclient.discovery import build
 
 st.set_page_config(
     page_title="Circle Up",
@@ -93,30 +94,81 @@ def get_profile_summary(form_data):
 
     return profile_summary
 
+# @st.cache_data(ttl=3600)
+# def send_to_sheets(data: List[List[str]]):
+#     """
+#     Envía los datos a Google Sheets, añadiéndolos al final de la hoja existente.
+#     :param data: Lista de listas, donde cada lista interna representa una fila de datos
+#     """
+#     try:
+#         key_sheets = json.loads(st.secrets["sheetskey"])
+#         scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+        
+#         creds = service_account.Credentials.from_service_account_info(key_sheets, scopes=scope)
+#         client = gspread.authorize(creds)
+#         sheet = client.open_by_key('1FzqJ-hUvIOyALFS7lXyufIF5XfcfNe6Xdvf_WdhFDw8').sheet1
+
+#         num_rows = len(sheet.get_all_values())
+        
+#         for row in data:
+#             num_rows += 1
+#             sheet.insert_row(row, num_rows)
+        
+#         return True
+#     except Exception as e:
+#         st.error(f"Lo siento, ha ocurrido un error al enviar los datos: {str(e)}")
+#         return False
+
 @st.cache_data(ttl=3600)
 def send_to_sheets(data: List[List[str]]):
     """
-    Envía los datos a Google Sheets, añadiéndolos al final de la hoja existente.
+    Envía los datos a Google Sheets, añadiéndolos al final de la hoja existente,
+    y luego ejecuta un script de Apps Script.
     :param data: Lista de listas, donde cada lista interna representa una fila de datos
     """
     try:
         key_sheets = json.loads(st.secrets["sheetskey"])
-        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-        
+        scope = ['https://spreadsheets.google.com/feeds', 
+                 'https://www.googleapis.com/auth/drive',
+                 'https://www.googleapis.com/auth/script.projects']  # Añadido el scope para Apps Script
+
         creds = service_account.Credentials.from_service_account_info(key_sheets, scopes=scope)
+        
+        # Enviar datos a Google Sheets
         client = gspread.authorize(creds)
         sheet = client.open_by_key('1FzqJ-hUvIOyALFS7lXyufIF5XfcfNe6Xdvf_WdhFDw8').sheet1
-
+        
         num_rows = len(sheet.get_all_values())
         
         for row in data:
             num_rows += 1
             sheet.insert_row(row, num_rows)
-
+        
+        # Ejecutar el script de Apps Script
+        service = build('script', 'v1', credentials=creds)
+        
+        # ID de tu proyecto de Apps Script
+        SCRIPT_ID = '1_8qaBl9DsV8e15m2rIvE_lsbxcFbR0vk3dtZwgsLoWlqcOSWKktlvKga'
+        
+        # Ejecutar el script
+        request = service.scripts().run(body={
+            'function': 'createPersonalizedSlides',
+            'parameters': []  # Añade parámetros aquí si tu función los requiere
+        }, scriptId=SCRIPT_ID)
+        
+        response = request.execute()
+        
+        if 'error' in response:
+            st.error(f"Los datos se enviaron correctamente, pero hubo un error al ejecutar el script: {response['error']['message']}")
+        else:
+            st.success("Los datos se enviaron correctamente y el script se ejecutó con éxito.")
+        
         return True
+    
     except Exception as e:
         st.error(f"Lo siento, ha ocurrido un error al enviar los datos: {str(e)}")
         return False
+    
 
 @st.cache_data(ttl=3600)
 def structured_presentation(topic: str, _client):
@@ -327,7 +379,7 @@ if st.session_state.form_submitted and st.session_state.markdown_output is not N
         # st.table(st.session_state.table_data)
         # st.write([values for table in st.session_state.table_data for key, values in table.items() if key =='name'])
         st.success("Presentación generada. Preparando envío a Google Sheets.")
-        if st.button("Enviar a Google Sheets", use_container_width=True):
+        if st.button("Enviar/Ejecutar Google Sheets/AppScript", use_container_width=True):
             with st.spinner("Enviando datos a Google Sheets..."):
                 sheet_data = [[row['description'] for row in st.session_state.table_data]]
                 success = send_to_sheets(sheet_data)
@@ -337,28 +389,7 @@ if st.session_state.form_submitted and st.session_state.markdown_output is not N
             else:
                 st.error("Hubo un problema al enviar los datos a Google Sheets. Por favor, inténtalo de nuevo más tarde.")
 
-        
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 if not st.session_state.form_submitted:
     st.info("Por favor, completa el formulario y haz clic en 'Enviar perfil' para ver los resultados.")
-
-
 
 
