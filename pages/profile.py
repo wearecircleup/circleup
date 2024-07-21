@@ -164,15 +164,15 @@ def authenticated_login_sentinel():
 
     accesse_granted()
 
-try:
-    if st.session_state.user_auth is not None and st.session_state.user_auth.user_status == 'Activo':
-        if st.session_state.user_auth.user_role == 'Learner':
-            authenticated_login_crew()
-        elif st.session_state.user_auth.user_role == 'Volunteer':
-            authenticated_login_nomads()
-        elif st.session_state.user_auth.user_role == 'Admin':
-            authenticated_login_sentinel()
-    else: 
-        unauthenticate_login(st.session_state.user_auth.user_role)
-except:
-    st.switch_page("app.py")
+# try:
+if st.session_state.user_auth is not None and st.session_state.user_auth.user_status == 'Activo':
+    if st.session_state.user_auth.user_role == 'Learner':
+        authenticated_login_crew()
+    elif st.session_state.user_auth.user_role == 'Volunteer':
+        authenticated_login_nomads()
+    elif st.session_state.user_auth.user_role == 'Admin':
+        authenticated_login_sentinel()
+else: 
+    unauthenticate_login(st.session_state.user_auth.user_role)
+# except:
+#     st.switch_page("app.py")

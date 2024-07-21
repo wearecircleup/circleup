@@ -19,8 +19,6 @@ from google.oauth2.credentials import Credentials
 from google.oauth2 import service_account
 from typing import List
 
-from datetime import datetime
-
 
 st.set_page_config(
     page_title="Circle Up",
@@ -216,9 +214,9 @@ def sing_up():
         st.checkbox(disclaimer_data_agreemet,key="_data_sharing")
         st.form_submit_button('Regístrate',type="primary",help='Registro | Tribus',on_click=signup_firestore,use_container_width=True)
 
-try:
-    sing_up()
-except:
-    st.switch_page("app.py")
+# try:
+sing_up()
+# except:
+#     st.switch_page("app.py")
 
 menu()

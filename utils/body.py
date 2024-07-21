@@ -146,14 +146,9 @@ def warning_login_failed(email:str = None,password:str = None):
     if email and password :
         st.markdown('Hemos tenido dificultades para encontrar tu cuenta.')
         st.markdown('- Revisa que tu **correo electrónico y contraseña** estén  correctos. Es posible que haya errores de mayúsculas, minúsculas o de escritura.')
-        # st.markdown(f'- Verifica que has seleccionado la **tribu correcta**. ¿Estás seguro de que es :blue[**{tribe}**]?, Selecciona tu tribu!.')
-        # with st.container(height=250):
-        #     st.selectbox(label='Menú para Usuarios Registrados | **Log In**', options=tribes, index=tribes.index(tribe),disabled=True)
-        #     st.warning("Por favor, asegúrate de revisar los puntos anteriores e intenta iniciar sesión nuevamente.", icon="⚠️")
     else: 
         st.markdown('Hemos tenido dificultades para encontrar tu cuenta.')
         st.markdown('- Revisa que tu **correo electrónico y contraseña** estén  correctos. Es posible que haya errores de mayúsculas, minúsculas o de escritura.')
-        # st.markdown(f'- Verifica que has seleccionado la **tribu correcta**. ¿Estás seguro de que es :blue[**{tribe}**]?, Selecciona tu tribu!.')
         st.warning("Por favor, asegúrate de revisar tu **correo electrónico y contraseña**!", icon="⚠️")
 
 

@@ -28,13 +28,14 @@ class Users:
         data_sharing: bool = None
         user_status: str = 'Activo'
         user_role: str = 'Learner'
+        strengths: List[str] = field(default_factory=list)
+        weaknesses: List[str] = field(default_factory=list)
         topics_interest: List[str] = field(default_factory=list)
         disability: List[str] = field(default_factory=list) 
         ethnic_affiliation: List[str] = field(default_factory=list) 
         skills: List[str] = field(default_factory=list)
         how_to_learn: List[str] = field(default_factory=list)
         cloud_id:str = None
-
 
         def as_dict(self):
                 """
@@ -102,12 +103,6 @@ class Users:
                 except IndexError as e:
                         return {'status':'sigup_approved'}
         
-        # @staticmethod
-        # def successful_signup(data,connection):
-        #         """
-        #         Upload Profile Atributes On Firestore (Sign Up)
-        #         """
-        #         return connection.collection('users_collection').add(data)
 
         @staticmethod
         def successful_signup(data, connection):

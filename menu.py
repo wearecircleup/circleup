@@ -47,11 +47,11 @@ def unauthenticated_menu():
     st.sidebar.page_link('pages/signup.py',label='**Sing Up**')
 
 def menu():
-    try:
-        if st.session_state.user_auth: 
-            if st.session_state.user_auth.user_status == 'Activo':
-                authenticated_menu()
-        else:
-            unauthenticated_menu()
-    except AttributeError:
-        st.switch_page('app.py')
+    # try:
+    if st.session_state.user_auth: 
+        if st.session_state.user_auth.user_status == 'Activo':
+            authenticated_menu()
+    else:
+        unauthenticated_menu()
+    # except AttributeError:
+    #     st.switch_page('app.py')

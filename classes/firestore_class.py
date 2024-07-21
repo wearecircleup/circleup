@@ -1,6 +1,7 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, asdict
 from typing import Dict, Any, List, Optional
 from google.cloud import firestore
+from classes.users_class import Users
 
 @dataclass
 class FirestoreDocument:
@@ -70,3 +71,19 @@ class Firestore:
             query = query.where(field, op, value)
         docs = query.stream()
         return [FirestoreDocument(id=doc.id, data=doc.to_dict()) for doc in docs]
+    
+
+
+    def auth_firestore(self, email: str, password: str) -> Users:
+        query = self.db.collection('users_collection')
+        query = query.where("email", "==", email).where("password", "==", password)
+        
+        results = list(query.limit(2).stream())
+        
+        if len(results) == 0:
+            return None
+        elif len(results) > 1:
+            return None
+        else:
+            user_data = asdict(results[0])
+            return user_data

@@ -1,22 +1,12 @@
 import json
 import streamlit as st
 from google.cloud import firestore
-from google.cloud.firestore_v1.base_query import FieldFilter
-import pandas as pd
-import numpy as np
-import time
-import datetime
-from dataclasses import dataclass
-import streamlit.components.v1 as components
 from menu import menu
 from utils.body import warning_login_failed
 from google.cloud import firestore
-from google.cloud.firestore_v1 import FieldFilter
 from dataclasses import asdict
-from classes.admin_class import Admin
-from classes.learner_class import Learner
-from classes.volunteer_class import Volunteer
-
+from classes.users_class import Users
+from classes.firestore_class import Firestore
 
 from utils.form_admin import admin_base
 from utils.form_learner import learner_base
@@ -29,8 +19,6 @@ from utils.form_options import (disabilities,ethnics,skills,
 
 from utils.form_instructions import form_definitions
 from utils.body import tribu_definition,html_banner
-import secrets
-
 
 st.set_page_config(
     page_title="Circle Up",
@@ -38,7 +26,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
 
 # Initialize Forms Opcions
 if 'disabilities' not in st.session_state:
@@ -55,7 +42,6 @@ if 'disabilities' not in st.session_state:
     st.session_state.topics_of_interest = topics_of_interest
     st.session_state.education_level = education_level
 
-
 if "_email_entered" not in st.session_state:
     st.session_state._email_entered = None
     st.session_state._password_entered = None
@@ -64,7 +50,6 @@ if "_email_entered" not in st.session_state:
 if 'ttl_data' not in st.session_state:
     st.session_state.ttl_data = 5
         
-
 # Initialize Roles Translation
 if 'role_synonym' not in st.session_state:
         st.session_state.role_synonym = 'Crew'
@@ -73,7 +58,6 @@ if 'role_synonym' not in st.session_state:
 if 'register_button' not in st.session_state:
         st.session_state.register_button = False
         
-
 # Initialize Register Button to use it a Toggle Button
 if '_is_ethnic' not in st.session_state:
         st.session_state._is_ethnic = "No"
@@ -84,28 +68,104 @@ if "user_auth" not in st.session_state:
     st.session_state.user_auth = None
 
 @st.cache_resource
-def firestore_client():
+def connector():
     key_firestore = json.loads(st.secrets["textkey"])
     db = firestore.Client.from_service_account_info(key_firestore)
-    return db
+    Conn = Firestore(db)
+    return Conn
 
-def login_setup(cls_role,email,password,connection):
+
+@st.experimental_dialog("Inicio de Sesión Fallido")
+def warning_login_failed(email: str = None, password: str = None):
+    st.error("No se pudo completar el inicio de sesión")
     if email and password:
-        intance = cls_role()
-        intance.user_authentication(email,password,connection)
-        if any(asdict(intance).values()):
-            st.toast('¡Validación exitosa!', icon='🎉')
-            st.session_state.user_auth = intance       
-        else:
-            warning_login_failed(st.session_state._email_entered,st.session_state._password_entered) 
+        st.info("Hubo un problema con las credenciales proporcionadas.", icon="ℹ️")
+        st.warning(
+            "Por favor, verifica lo siguiente:\n"
+            "- El correo electrónico está escrito correctamente\n"
+            "- La contraseña es la correcta (distingue entre mayúsculas y minúsculas)\n"
+            "- No hay espacios adicionales en los campos",
+            icon="⚠️"
+        )
     else:
-        warning_login_failed(st.session_state._email_entered,st.session_state._password_entered)
+        st.error("Campos incompletos")
+        st.warning(
+            "Asegúrate de completar todos los campos:\n"
+            "- Ingresa tu correo electrónico\n"
+            "- Ingresa tu contraseña",
+            icon="⚠️"
+        )
+    st.info("Si continúas teniendo problemas, puedes intentar restablecer tu contraseña o contactar a soporte. wearecircleup@gmail.com")
 
-def login_fetch(email,password):   
-    if email is not None and password is not None:
-        login_setup(Learner,email,password,firestore_client())
+@st.experimental_dialog("Inicio de Sesión Exitoso")
+def success_login():
+    st.success("¡Inicio de sesión completado!")
+    st.info(
+        "Bienvenido de nuevo a Circle Up.\n\n"
+        "Has iniciado sesión correctamente en tu cuenta.\n"
+        "Ahora puedes acceder a todas las funcionalidades de la plataforma.",
+        icon="ℹ️"
+    )
+    st.success("Disfruta tu experiencia en Circle Up.")
+
+@st.experimental_dialog("Usuario No Encontrado")
+def user_not_found(email: str):
+    st.error(f"No se encontró una cuenta asociada a: {email}")
+    st.info(
+        "Esto podría deberse a:\n"
+        "- Un error en el correo electrónico o contraseña ingresados\n"
+        "- Que aún no te has registrado en nuestra plataforma",
+        icon="ℹ️"
+    )
+    st.success(
+        "Puedes intentar lo siguiente:\n"
+        "- Verificar si escribiste correctamente tu correo\n"
+        "- Crear una nueva cuenta si aún no eres miembro",
+        icon="✅"
+    )
+    if st.button("Registrarse"):
+        st.markdown("[Ir a la página de registro](https://circleup.streamlit.app/signup)")
+
+@st.experimental_dialog("Contraseña Incorrecta")
+def wrong_password():
+    st.error("La contraseña ingresada no es correcta")
+    st.warning(
+        "Recuerda:\n"
+        "- Las contraseñas distinguen entre mayúsculas y minúsculas\n"
+        "- Verifica que no tengas el bloq mayús activado",
+        icon="⚠️"
+    )
+    st.info(
+        "Si no recuerdas tu contraseña, puedes:\n"
+        "- Intentar con otra contraseña que uses habitualmente\n"
+        "- Restablecer tu contraseña si la has olvidado",
+        icon="ℹ️"
+    )
+    if st.button("Restablecer Contraseña"):
+        st.info("Función de restablecimiento de contraseña en desarrollo.")
+
+def login_setup(email, password):
+    if not email or not password:
+        warning_login_failed(email, password)
+        return
+
+    data_auth = connector().auth_firestore(email, password)
+    
+    if not data_auth:
+        user_not_found(email)
+        return
+
+    instance = Users(**data_auth)
+    
+    if instance.password == password:
+        st.session_state.user_auth = instance
+        success_login()
     else:
-        warning_login_failed(st.session_state._email_entered,st.session_state._password_entered)
+        wrong_password()
+
+
+def forgot_password():
+    pass  # Función para recuperar contraseña (por implementar)
 
 st.html(html_banner)
 
@@ -121,20 +181,22 @@ st.subheader(f"**Log In | Circle Up** ⚫")
 
 st.markdown(intro_message)
 
-with st.container(height=310):
-
+with st.container():
     st.markdown("Por favor, ingresa con tus datos registrados para continuar. Si aún no tienes una cuenta, dirígete al botón de :blue[**Registro/Sign Up**]") 
     st.text_input(label="Correo electrónico",placeholder="mail@mail.com",key="_email_entered")      
     st.text_input(label="Contraseña",placeholder="eMp3r@D0r",key="_password_entered",type="password") 
-    st.button(label="Ingresar",type="primary",on_click=login_fetch,args=[st.session_state._email_entered,st.session_state._password_entered],use_container_width=True)
+    cols = st.columns([3, 1])
+    with cols[0]:
+        st.button(label="Ingresar",type="primary",on_click=login_setup,args=[st.session_state._email_entered,st.session_state._password_entered],use_container_width=True)
+    with cols[1]:
+        st.button("¿Olvidaste tu contraseña?", on_click=forgot_password, type="secondary", use_container_width=True)
 
-
-with st.container(height=170):
+with st.container():
     st.markdown(container_message)
-    cols = st.columns([2,2])
-    cols[0].button(f'¡Aprende Sobre Tribus!',type="secondary",on_click=tribu_definition,use_container_width=True)
-    cols[1].link_button('¿Qué es Circle Up?',url='https://circleup.com.co/',type="primary",use_container_width=True)
-
+    cols = st.columns([1, 1])
+    with cols[0]:
+        st.button(f'¡Aprende Sobre Tribus!',type="secondary",on_click=tribu_definition,use_container_width=True)
+    with cols[1]:
+        st.link_button('¿Qué es Circle Up?',url='https://circleup.com.co/',type="primary",use_container_width=True)
 
 menu()
-
