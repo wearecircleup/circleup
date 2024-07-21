@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from typing import Dict, Any, List, Optional
 from google.cloud import firestore
 from classes.users_class import Users
@@ -74,16 +74,18 @@ class Firestore:
     
 
 
-    def auth_firestore(self, email: str, password: str) -> Users:
-        query = self.db.collection('users_collection')
-        query = query.where("email", "==", email).where("password", "==", password)
-        
-        results = list(query.limit(2).stream())
-        
-        if len(results) == 0:
+    def auth_firestore(self, email: str, password: str) -> Optional[Users]:
+        try:
+            query = self.db.collection('users_collection')
+            query = query.where("email", "==", email).where("password", "==", password)
+            
+            results = list(query.limit(2).stream())
+            
+            if len(results) == 0 or len(results) > 1:
+                return None
+            else:
+                user_data = results[0].to_dict()
+                return user_data
+        except Exception as e:
+            print(f"Error in authentication: {str(e)}")
             return None
-        elif len(results) > 1:
-            return None
-        else:
-            user_data = asdict(results[0])
-            return user_data

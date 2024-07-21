@@ -74,98 +74,42 @@ def connector():
     Conn = Firestore(db)
     return Conn
 
-
-@st.experimental_dialog("Inicio de Sesión Fallido")
-def warning_login_failed(email: str = None, password: str = None):
-    st.error("No se pudo completar el inicio de sesión")
-    if email and password:
-        st.info("Hubo un problema con las credenciales proporcionadas.", icon="ℹ️")
+def show_login_feedback(status: str, email: str = None):
+    if status == "success":
+        st.toast("Inicio de sesión exitoso", icon="✅")
+        st.success("Bienvenido de nuevo a Circle Up")
+        st.info("Has iniciado sesión correctamente. Ahora puedes acceder a todas las funcionalidades de la plataforma.")
+    elif status == "wrong_password":
+        st.toast("Contraseña incorrecta", icon="❌")
+        st.error("La contraseña ingresada no es correcta")
         st.warning(
-            "Por favor, verifica lo siguiente:\n"
-            "- El correo electrónico está escrito correctamente\n"
-            "- La contraseña es la correcta (distingue entre mayúsculas y minúsculas)\n"
-            "- No hay espacios adicionales en los campos",
-            icon="⚠️"
+            "- Las contraseñas distinguen entre mayúsculas y minúsculas\n"
+            "- Verifica que no tengas el bloq mayús activado"
         )
     else:
-        st.error("Campos incompletos")
+        st.toast("Error de inicio de sesión", icon="⚠️")
+        st.error("No se pudo completar el inicio de sesión")
         st.warning(
-            "Asegúrate de completar todos los campos:\n"
-            "- Ingresa tu correo electrónico\n"
-            "- Ingresa tu contraseña",
-            icon="⚠️"
+            "Por favor, **verifica**\n"
+            "- El correo electrónico está escrito correctamente\n"
+            "- La contraseña es la correcta\n"
+            "- No hay espacios adicionales en los campos"
         )
-    st.info("Si continúas teniendo problemas, puedes intentar restablecer tu contraseña o contactar a soporte. wearecircleup@gmail.com")
-
-@st.experimental_dialog("Inicio de Sesión Exitoso")
-def success_login():
-    st.success("¡Inicio de sesión completado!")
-    st.info(
-        "Bienvenido de nuevo a Circle Up.\n\n"
-        "Has iniciado sesión correctamente en tu cuenta.\n"
-        "Ahora puedes acceder a todas las funcionalidades de la plataforma.",
-        icon="ℹ️"
-    )
-    st.success("Disfruta tu experiencia en Circle Up.")
-
-@st.experimental_dialog("Usuario No Encontrado")
-def user_not_found(email: str):
-    st.error(f"No se encontró una cuenta asociada a: {email}")
-    st.info(
-        "Esto podría deberse a:\n"
-        "- Un error en el correo electrónico o contraseña ingresados\n"
-        "- Que aún no te has registrado en nuestra plataforma",
-        icon="ℹ️"
-    )
-    st.success(
-        "Puedes intentar lo siguiente:\n"
-        "- Verificar si escribiste correctamente tu correo\n"
-        "- Crear una nueva cuenta si aún no eres miembro",
-        icon="✅"
-    )
-    if st.button("Registrarse"):
-        st.markdown("[Ir a la página de registro](https://circleup.streamlit.app/signup)")
-
-@st.experimental_dialog("Contraseña Incorrecta")
-def wrong_password():
-    st.error("La contraseña ingresada no es correcta")
-    st.warning(
-        "Recuerda:\n"
-        "- Las contraseñas distinguen entre mayúsculas y minúsculas\n"
-        "- Verifica que no tengas el bloq mayús activado",
-        icon="⚠️"
-    )
-    st.info(
-        "Si no recuerdas tu contraseña, puedes:\n"
-        "- Intentar con otra contraseña que uses habitualmente\n"
-        "- Restablecer tu contraseña si la has olvidado",
-        icon="ℹ️"
-    )
-    if st.button("Restablecer Contraseña"):
-        st.info("Función de restablecimiento de contraseña en desarrollo.")
 
 def login_setup(email, password):
     if not email or not password:
-        warning_login_failed(email, password)
-        return
+        return "incomplete_fields"
 
-    data_auth = connector().auth_firestore(email, password)
-    
-    if not data_auth:
-        user_not_found(email)
-        return
-
-    instance = Users(**data_auth)
-    
-    if instance.password == password:
+    try:
+        instance = connector().auth_firestore(email, password)
+    except:
+        instance = None
+    if instance:
         st.session_state.user_auth = instance
-        success_login()
+        return "success"
     else:
-        wrong_password()
+        return "wrong_password"
 
-
-def forgot_password():
-    pass  # Función para recuperar contraseña (por implementar)
 
 st.html(html_banner)
 
@@ -185,11 +129,16 @@ with st.container():
     st.markdown("Por favor, ingresa con tus datos registrados para continuar. Si aún no tienes una cuenta, dirígete al botón de :blue[**Registro/Sign Up**]") 
     st.text_input(label="Correo electrónico",placeholder="mail@mail.com",key="_email_entered")      
     st.text_input(label="Contraseña",placeholder="eMp3r@D0r",key="_password_entered",type="password") 
-    cols = st.columns([3, 1])
-    with cols[0]:
-        st.button(label="Ingresar",type="primary",on_click=login_setup,args=[st.session_state._email_entered,st.session_state._password_entered],use_container_width=True)
-    with cols[1]:
-        st.button("¿Olvidaste tu contraseña?", on_click=forgot_password, type="secondary", use_container_width=True)
+
+    feedback_container = st.empty()
+
+    if st.button(label="Ingresar", type="primary", use_container_width=True):
+        login_result = login_setup(st.session_state._email_entered, st.session_state._password_entered)
+
+        with feedback_container:
+            show_login_feedback(login_result, st.session_state._email_entered)
+
+
 
 with st.container():
     st.markdown(container_message)
