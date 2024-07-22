@@ -1,16 +1,13 @@
-import datetime
 import streamlit as st
 from menu import menu
-import pandas as pd
-from dataclasses import dataclass, asdict
 from utils.body import (warning_empty_data,unauthenticate_login,
                         warning_profile_changes,succeed_update_profiles,
                         html_banner)
 from utils.form_options import skills, how_to_learn
 import json
 from google.cloud import firestore
-import time
-import anthropic
+from classes.firestore_class import Firestore
+from dataclasses import asdict
 
 st.set_page_config(
     page_title="Circle Up",
@@ -24,10 +21,11 @@ if 'updates_confirmation' not in st.session_state:
     st.session_state.updates_request = True
 
 @st.cache_resource
-def firestore_client():
+def connector():
     key_firestore = json.loads(st.secrets["textkey"])
     db = firestore.Client.from_service_account_info(key_firestore)
-    return db
+    Conn = Firestore(db)
+    return Conn
 
 def update_users_profile():
     if st.session_state.user_auth.user_role == 'Volunteer':
@@ -75,15 +73,10 @@ def profile_updates():
         'guardian_fullname':st.session_state._guardian_fullname,
         'guardian_relationship':st.session_state._guardian_relationship,
         'emergency_phone':st.session_state._emergency_phone,
+        'skills':st.session_state._skills,
+        'how_to_learn':st.session_state._how_to_learn
+
     }
-
-    if st.session_state.user_auth.user_role == 'Learner':
-        profile_attributes['skills'] = st.session_state._skills
-        profile_attributes['how_to_learn'] = st.session_state._how_to_learn
-    else: 
-        profile_attributes = profile_attributes
-
-    st.write(profile_attributes)
 
     if all(profile_attributes.values()):
         changes = st.session_state.user_auth.catch_profile_updates(**profile_attributes)
@@ -107,20 +100,18 @@ def update_profile_changes():
         'guardian_fullname':st.session_state._guardian_fullname,
         'guardian_relationship':st.session_state._guardian_relationship,
         'emergency_phone':st.session_state._emergency_phone,
+        'skills':st.session_state._skills,
+        'how_to_learn':st.session_state._how_to_learn
     }
 
-    if st.session_state.user_auth.user_role != 'Volunteer':
-        profile_attributes = profile_attributes
-    else: 
-        profile_attributes['skills'] = st.session_state._skills
-        profile_attributes['how_to_learn'] = st.session_state._how_to_learn
-
     st.session_state.user_auth.update_profile(**profile_attributes)
-    st.session_state.user_auth.update_firestore_profile(firestore_client())
+    data = asdict(st.session_state.user_auth)
+    cloud_id = st.session_state.user_auth.cloud_id
+    connector().update_document('users_collection',cloud_id,data)
     st.session_state.updates_request = True
     succeed_update_profiles(st.session_state.user_auth.first_name.capitalize())
 
-# Redirect to app.py if not logged in, otherwise show the navigation menu
+
 menu()
 
 def form_update_profile():
@@ -132,7 +123,7 @@ def form_update_profile():
 
 def accesse_granted():
     profile_warning = """
-    :blue[**Mantén tu perfil al día para una experiencia óptima en Circle Up ⚫**]. Actualizar tu información es rápido y sencillo, 
+    :blue[**Mantén tu perfil al día para una experiencia óptima en Circle Up Community**]. Actualizar tu información es rápido y sencillo, 
     y asegura que recibas contenido y oportunidades acordes a tus intereses y necesidades actuales. Si tienes alguna pregunta o 
     necesitas asistencia, los **Sentinel** están siempre disponibles para ofrecerte su apoyo. ¡No dudes en actualizar tus datos o contactarnos!
 
@@ -143,36 +134,12 @@ def accesse_granted():
         form_update_profile()
     
 
-def authenticated_login_crew():
-    st.html(html_banner)
-    st.subheader(f'¡Hola, @{st.session_state.user_auth.first_name.capitalize()}!')
-    st.markdown(f"¿Sabías que perteneces a la tribu **{st.session_state.role_synonym}**? ¡Es genial tenerte con nosotros! Prepárate para sumergirte en un mundo de aprendizaje. ¡Vamos a aprender un montón juntos!")
-
-    accesse_granted()
-
-def authenticated_login_nomads():
-    st.html(html_banner)
-    st.subheader(f'¡Hola, @{st.session_state.user_auth.first_name.capitalize()}!')
-    st.markdown(f"¿Sabías que perteneces a la tribu **{st.session_state.role_synonym}**? ¡Es genial tenerte con nosotros! Prepárate para sumergirte en un emocionante mundo de enseñanza y aprendizaje. ¡Juntos vamos a explorar y aprender mucho!")
-
-    accesse_granted()
-
-def authenticated_login_sentinel():
-    st.html(html_banner)
-    st.subheader(f'¡Hola, @{st.session_state.user_auth.first_name.capitalize()}!')
-    st.markdown(f"¿Sabías que perteneces a la tribu **{st.session_state.role_synonym}**? ¡Es genial tenerte con nosotros! Prepárate para sumergirte en un emocionante mundo de enseñanza y aprendizaje. ¡Juntos vamos a explorar y aprender mucho!")
-
-    accesse_granted()
-
-# try:
-if st.session_state.user_auth is not None and st.session_state.user_auth.user_status == 'Activo':
-    if st.session_state.user_auth.user_role == 'Learner':
-        authenticated_login_crew()
-    elif st.session_state.user_auth.user_role == 'Volunteer':
-        authenticated_login_nomads()
-    elif st.session_state.user_auth.user_role == 'Admin':
-        authenticated_login_sentinel()
-else: 
-    unauthenticate_login(st.session_state.user_auth.user_role)
-# except:
-#     st.switch_page("app.py")
+try:
+    if st.session_state.user_auth is not None and st.session_state.user_auth.user_status == 'Activo':
+        st.html(html_banner)
+        st.subheader(f'¡Hola, @{st.session_state.user_auth.first_name.capitalize()}!')
+        accesse_granted()
+    else: 
+        unauthenticate_login(st.session_state.user_auth.user_role)
+except:
+    st.switch_page("app.py")

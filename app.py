@@ -1,17 +1,19 @@
+import datetime as dt
+from datetime import datetime
 import json
 import streamlit as st
 from google.cloud import firestore
 from menu import menu
-from utils.body import warning_login_failed
 from google.cloud import firestore
-from dataclasses import asdict
 from classes.users_class import Users
 from classes.firestore_class import Firestore
-
-from utils.form_admin import admin_base
-from utils.form_learner import learner_base
-from utils.form_volunteer import volunteer_base
-
+from classes.spread_class import Sheets   
+from classes.utils_class import CategoryUtils
+from typing import List
+import gspread
+from google.oauth2.credentials import Credentials
+from google.oauth2 import service_account
+from dataclasses import asdict
 from utils.form_options import (disabilities,ethnics,skills,
                                 how_to_learn,weaknesses,strengths,
                                 volunteer_keywords,gender_list,id_user_list,
@@ -80,7 +82,7 @@ def show_login_feedback(status: str, email: str = None):
         st.success("Bienvenido de nuevo a Circle Up")
         st.info("Has iniciado sesión correctamente. Ahora puedes acceder a todas las funcionalidades de la plataforma.")
     elif status == "wrong_password":
-        st.toast("Contraseña incorrecta", icon="❌")
+        st.toast("Contraseña incorrecta", icon="⚠️")
         st.error("La contraseña ingresada no es correcta")
         st.warning(
             "- Las contraseñas distinguen entre mayúsculas y minúsculas\n"
@@ -96,12 +98,46 @@ def show_login_feedback(status: str, email: str = None):
             "- No hay espacios adicionales en los campos"
         )
 
+def prepare_sheets_data(instance_data):
+    """
+    Prepara los datos específicos para enviar a Google Sheets.
+    """
+    utils = CategoryUtils()
+    now = datetime.now()
+    return [
+        now.strftime("%d-%m-%Y"),
+        utils.date_to_day_of_week(now.strftime("%d-%m-%Y")),
+        now.strftime("%H:%M"),
+        utils.time_to_category(now.strftime("%H:%M")),
+        instance_data.get('first_name', ''),
+        instance_data.get('last_name', ''),
+        instance_data.get('gender', ''),
+        utils.age_to_category(instance_data.get('dob', '')),
+        instance_data.get('email', ''),
+        instance_data.get('user_role', ''),
+        instance_data.get('city_residence', ''),
+        'login'
+    ]
+
+@st.cache_data(ttl=3600,show_spinner=False)
+def send_to_sheets(data: List[List[str]]):
+    try:
+        sheet = Sheets('1lAPcVR3e7MqUJDt2ys25eRY7ozu5HV61ZhWFYuMULOM','Log In')
+        sheet.create(data)
+    except Exception as e:
+        st.error(f"Lo siento, ha ocurrido un error al enviar los datos: {str(e)}")
+        return False
+
 def login_setup(email, password):
     if not email or not password:
         return "incomplete_fields"
 
     try:
-        instance = connector().auth_firestore(email, password)
+        query_data = connector().auth_firestore(email, password)
+        instance = Users(**query_data)
+        instance_data = asdict(instance)
+        sheets_data = prepare_sheets_data(instance_data)
+        send_to_sheets([sheets_data]) 
     except:
         instance = None
     if instance:
@@ -137,8 +173,6 @@ with st.container():
 
         with feedback_container:
             show_login_feedback(login_result, st.session_state._email_entered)
-
-
 
 with st.container():
     st.markdown(container_message)

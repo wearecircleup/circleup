@@ -109,13 +109,8 @@ class Users:
                 """
                 Upload Profile Attributes On Firestore (Sign Up) and Update cloud_id
                 """
-                # Create the document in Firestore
                 doc_ref = connection.collection('users_collection').add(data)
-                
-                # Get the auto-generated document ID
                 cloud_id = doc_ref[1].id
-                
-                # Update the document with the cloud_id
                 doc_ref[1].update({'cloud_id': cloud_id})
                 
                 return doc_ref

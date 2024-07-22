@@ -42,7 +42,7 @@ def warning_deletion(course):
 
 @st.experimental_dialog("Curso Eliminado")
 def deletion_confirm():
-    st.info("¡Eliminado! Si necesitas ayuda, no dudes en contactar a un Sentinel", icon="ℹ️")
+    st.info("¡Eliminado! Si necesitas ayuda, no dudes en contactar a sporte", icon="ℹ️")
     st.markdown("**¡Sigue adelante con Circle Up ⚫!**")
     st.snow()
 
@@ -180,8 +180,7 @@ def warning_signup_failed(hidden_data):
     del hidden_data['status']
     user_data = pd.DataFrame([hidden_data])
     st.dataframe(user_data,hide_index=True,use_container_width=True)
-    st.divider()
-    st.warning("Por favor, verifica si reconoces estos datos. Si necesitas ayuda, no dudes en contactar a un Sentinel.",icon="⚠️")
+    st.warning("Por favor, verifica si reconoces estos datos. Si necesitas ayuda, no dudes en contactar a sporte.",icon="⚠️")
     
 # Info Dialogs
 
@@ -286,7 +285,7 @@ def succeed_update_course(name):
     st.subheader(f'¡Hola, @{name}! ¡Tu Curso ha sido actualizado!')
     st.markdown("¡La información ya está en nuestro sistema! Ahora, ¡puedes seguir adelante y realizar más propuestas!")
     st.divider()
-    st.success("¡Listo! Si necesitas ayuda, no dudes en contactar a un Sentinel", icon="✅")
+    st.success("¡Listo! Si necesitas ayuda, no dudes en contactar a sporte", icon="✅")
     st.markdown("**¡Sigue adelante con Circle Up ⚫!**")
     st.balloons()
 
