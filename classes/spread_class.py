@@ -45,6 +45,49 @@ class Sheets:
         except Exception as e:
             st.error(f"Error al crear el registro: {str(e)}")
             return False
+        
+
+    def replace_values(self, cloud_id: str, updates: Dict[str, Any]) -> bool:
+        try:
+            # Obtener todas las cabeceras
+            headers = self.sheet.row_values(1)
+            
+            # Encontrar el índice de la columna 'cloud_id'
+            cloud_id_index = headers.index('cloud_id') + 1
+            
+            # Buscar la fila con el cloud_id especificado
+            cell = self.sheet.find(cloud_id, in_column=cloud_id_index)
+            if not cell:
+                st.error(f"No se encontró ninguna fila con cloud_id: {cloud_id}")
+                return False
+            
+            row = cell.row
+            
+            # Preparar las actualizaciones
+            cells_to_update = []
+            for column, value in updates.items():
+                if column in headers:
+                    col_index = headers.index(column) + 1
+                    cell = self.sheet.cell(row, col_index)
+                    cell.value = value
+                    cells_to_update.append(cell)
+                else:
+                    st.warning(f"La columna '{column}' no existe en la hoja. Se omitirá.")
+            
+            # Realizar las actualizaciones en lote
+            if cells_to_update:
+                self.sheet.update_cells(cells_to_update)
+                return True
+            else:
+                st.warning("No se realizaron actualizaciones.")
+                return False
+            
+        except gspread.exceptions.APIError as e:
+            st.error(f"Error de API al actualizar los valores: {str(e)}")
+            return False
+        except Exception as e:
+            st.error(f"Error al actualizar los valores: {str(e)}")
+            return False
 
     @st.cache_data(ttl=3600)
     def update(self, email: str, new_data: List[str]) -> bool:

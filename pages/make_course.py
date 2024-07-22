@@ -3,6 +3,8 @@ from menu import menu
 from utils.body import html_banner
 from google.cloud import firestore
 from classes.firestore_class import Firestore
+from classes.spread_class import Sheets
+from classes.utils_class import CategoryUtils
 from utils.form_options import careers, volunteer_level, skills, roles_jerarquicos
 from classes.anthropic_agent import brainstorming, generate_presentation
 import anthropic
@@ -24,23 +26,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-st.markdown("""
-<style>
-    .stApp {
-        max-width: 100%;
-        padding: 1rem;
-    }
-    .stTextInput, .stSelectbox {
-        max-width: 100%;
-    }
-    p,ol,ul .stMarkdown {
-        font-size: 14px;
-    }
-    h1,h2,h3,h4 {
-        font-size: 22px;
-    }
-</style>
-""", unsafe_allow_html=True)
+
+st.markdown(CategoryUtils().markdown_design(), unsafe_allow_html=True)
+
 
 
 if 'status_request' not in st.session_state:
@@ -96,26 +84,11 @@ def get_profile_summary(form_data):
 
     return profile_summary
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=3600,show_spinner=False)
 def send_to_sheets(data: List[List[str]]):
-    """
-    Envía los datos a Google Sheets, añadiéndolos al final de la hoja existente.
-    :param data: Lista de listas, donde cada lista interna representa una fila de datos
-    """
     try:
-        key_sheets = json.loads(st.secrets["sheetskey"])
-        scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
-        
-        creds = service_account.Credentials.from_service_account_info(key_sheets, scopes=scope)
-        client = gspread.authorize(creds)
-        sheet = client.open_by_key('1FzqJ-hUvIOyALFS7lXyufIF5XfcfNe6Xdvf_WdhFDw8').sheet1
-
-        num_rows = len(sheet.get_all_values())
-        
-        for row in data:
-            num_rows += 1
-            sheet.insert_row(row, num_rows)
-        
+        sheet = Sheets('1FzqJ-hUvIOyALFS7lXyufIF5XfcfNe6Xdvf_WdhFDw8','Anthropic')
+        sheet.create(data)
         return True
     except Exception as e:
         st.error(f"Lo siento, ha ocurrido un error al enviar los datos: {str(e)}")
@@ -150,43 +123,22 @@ def format_markdown_output(markdown_output):
 
 menu()
 
-def age_to_category(birth_date_str: str) -> str:
-    """
-    Convierte una fecha de nacimiento a una categoría de edad.
-    
-    :param birth_date_str: Fecha de nacimiento en formato "DD-MM-YYYY"
-    :return: Categoría de edad como string
-    """
-    birth_date = datetime.strptime(birth_date_str, "%d-%m-%Y")
-    today = datetime.now()
-    age = today.year - birth_date.year
-
-    if today.month < birth_date.month or (today.month == birth_date.month and today.day < birth_date.day):
-        age -= 1
-
-    categories = ["0-4", "5-9", "10-14", "15-19", "20-24","25-29", "30-34", "35-39", "40-44", "45-49", "50-54", "55-59", "60+"]
-    
-    if age >= 60:
-        return "60+"
-    for category in categories:
-        start, end = map(int, category.split("-"))
-        if start <= age <= end:
-            return category
-    
-    return "NoT Found"
-
 
 def get_user_data():
     """
     Obtiene los datos de usuario de Streamlit session state.
     """
+    utils = CategoryUtils()
     return {
+        "date":utils.get_current_date(),
+        "week":utils.date_to_day_of_week(),
+        "hour_range":utils.time_to_category(),
         "first_name": st.session_state.user_auth.first_name,
         "last_name": st.session_state.user_auth.last_name,
         "email": st.session_state.user_auth.email,
         "user_role": st.session_state.user_auth.user_role,
         "phone_number": st.session_state.user_auth.phone_number,
-        "dob": age_to_category(st.session_state.user_auth.dob),
+        "dob": utils.age_to_category(st.session_state.user_auth.dob),
         "career": st.session_state.career,
         "specific_career": st.session_state.specific_career,
         "current_job": st.session_state.current_job,
@@ -197,7 +149,8 @@ def get_user_data():
         "gender": st.session_state.user_auth.gender,
         "profile": st.session_state.profile_summary,
         "brainstorming": st.session_state.markdown_output,
-        "idea": st.session_state.idea
+        "idea": st.session_state.idea,
+
     }
 
 st.title("Circle Up - Creación de Propuestas Educativas")
@@ -329,7 +282,7 @@ if st.session_state.form_submitted and st.session_state.markdown_output is not N
         # st.table(st.session_state.table_data)
         # st.write([values for table in st.session_state.table_data for key, values in table.items() if key =='name'])
         st.success("Presentación generada. Preparando envío a Google Sheets.")
-        if st.button("Enviar/Ejecutar Google Sheets/AppScript", use_container_width=True):
+        if st.button("Enviar Google Sheets", use_container_width=True):
             with st.spinner("Enviando datos a Google Sheets..."):
                 sheet_data = [[row['description'] for row in st.session_state.table_data]]
                 success = send_to_sheets(sheet_data)

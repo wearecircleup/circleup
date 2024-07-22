@@ -52,11 +52,11 @@ def brainstorming(profile: str, client) -> str:
 
 def create_community_academic_presentation_schemas() -> List[ResponseSchema]:
     schemas = [
-        ResponseSchema(name="context", description="Breve descripción del tema (30 palabras). Incluir área de estudio y relevancia para la comunidad."),
+        ResponseSchema(name="context", description="Breve descripción del tema (40 palabras). Incluir área de estudio y relevancia para la comunidad."),
         ResponseSchema(name="slide1_title", description="Título conciso y atractivo para la presentación."),
         ResponseSchema(name="slide1_objective", description="Objetivo principal de la sesión (1 oración)."),
         ResponseSchema(name="slide2_icebreaker_title", description="Título de la actividad dinámica inicial."),
-        ResponseSchema(name="slide2_icebreaker_instructions", description="Instrucciones breves para una actividad dinámica sin materiales (máximo 50 palabras)."),
+        ResponseSchema(name="slide2_icebreaker_instructions", description="Instrucciones breves para una actividad dinámica, divertida, colaborativa, participativa,  sin materiales (máximo 60 palabras)."),
         ResponseSchema(name="slide2_icebreaker_purpose", description="Propósito de la actividad en relación con el tema (1 oración)."),
         ResponseSchema(name="slide3_rhetorical_question", description="Pregunta retórica para estimular la participación y reflexión."),
         ResponseSchema(name="slide4_concept1_title", description="Título del primer concepto fundamental."),
@@ -66,17 +66,17 @@ def create_community_academic_presentation_schemas() -> List[ResponseSchema]:
         ResponseSchema(name="slide6_concept3_title", description="Título del tercer concepto fundamental."),
         ResponseSchema(name="slide6_concept3_definition", description="Definición del tercer concepto (máximo 20 palabras)."),
         ResponseSchema(name="slide7_real_world_application_title", description="Título de la sección de aplicación en el mundo real."),
-        ResponseSchema(name="slide7_real_world_application_points", description="3-4 puntos sobre cómo se aplica el tema en situaciones reales."),
+        ResponseSchema(name="slide7_real_world_application_points", description="3-4 puntos numerados sobre cómo se aplica el tema en situaciones reales."),
         ResponseSchema(name="slide8_leadership_insights_title", description="Título de la sección de insights de liderazgo."),
-        ResponseSchema(name="slide8_leadership_insights_points", description="3-4 puntos sobre liderazgo relacionados con el tema."),
+        ResponseSchema(name="slide8_leadership_insights_points", description="3-4 puntos numerados sobre liderazgo relacionados con el tema."),
         ResponseSchema(name="slide9_critical_thinking_title", description="Título de la sección de pensamiento crítico."),
-        ResponseSchema(name="slide9_critical_thinking_points", description="3-4 puntos que fomenten el pensamiento crítico sobre el tema."),
+        ResponseSchema(name="slide9_critical_thinking_points", description="3-4 puntos numerados que fomenten el pensamiento crítico sobre el tema."),
         ResponseSchema(name="slide10_problem_solving_title", description="Título de la sección de resolución de problemas."),
-        ResponseSchema(name="slide10_problem_solving_points", description="3-4 estrategias de resolución de problemas aplicadas al tema."),
+        ResponseSchema(name="slide10_problem_solving_points", description="3-4 estrategias numeradas de resolución de problemas aplicadas al tema."),
         ResponseSchema(name="slide11_community_impact_title", description="Título de la sección de impacto comunitario."),
-        ResponseSchema(name="slide11_community_impact_points", description="3-4 puntos sobre cómo el tema puede impactar positivamente en la comunidad."),
+        ResponseSchema(name="slide11_community_impact_points", description="3-4 puntos numerados sobre cómo el tema puede impactar positivamente en la comunidad."),
         ResponseSchema(name="slide12_open_discussion_questions", description="3 preguntas abiertas para fomentar la discusión grupal."),
-        ResponseSchema(name="open_source_resources", description="Lista de 3-5 recursos de código abierto relevantes para explorar más el tema."),
+        ResponseSchema(name="open_source_resources", description="Lista de 3-4 recursos de código abierto o open source relevantes para explorar más el tema, colocar nombre recurso: definicion practica"),
         ResponseSchema(name="verified_references", description="Lista de 3-5 referencias bibliográficas de investigaciones o articulos cientificos en formato APA. Incluir solo si hay alta confianza en su exactitud.")
     ]
     return schemas

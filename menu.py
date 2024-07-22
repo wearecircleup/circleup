@@ -35,11 +35,12 @@ def authenticated_menu():
         if st.session_state.user_auth.user_role == 'Learner':
             st.sidebar.page_link("pages/be_volunteer.py", label="Volunteer Now")
         if st.session_state.user_auth.user_role in ['Volunteer','Admin']:
-            st.sidebar.page_link("pages/pensum-volunteer.py", label=f"Pensum Template")
+            st.sidebar.page_link("pages/pensum_volunteer.py", label=f"Pensum Template")
             st.sidebar.page_link("pages/make_course.py", label=f"Brainstorm Ideas")
             if st.session_state.user_auth.user_role == 'Admin':
-                st.sidebar.page_link("pages/pensum-admin.py",label="Pensum Review")
+                st.sidebar.page_link("pages/pensum_admin.py",label="Pensum Review")
                 st.sidebar.page_link("pages/accept_volunteer.py",label="Volunteer Roles")
+                st.sidebar.page_link("pages/publish_course.py",label="Launch Course")
 
 
 def unauthenticated_menu():

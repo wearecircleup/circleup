@@ -5,7 +5,11 @@ from utils.body import html_banner
 from google.cloud import firestore
 from classes.firestore_class import Firestore
 from classes.email_class import Email
+from classes.spread_class import Sheets
+from classes.utils_class import CategoryUtils
 from google.cloud.firestore_v1.base_query import FieldFilter
+
+
 
 st.set_page_config(
     page_title="Circle Up",
@@ -51,6 +55,7 @@ def connector():
 
 menu()
 
+
 def manage_volunteer_requests(connector: Firestore):
     st.title("Gestión de Solicitudes de Voluntarios")
 
@@ -65,7 +70,6 @@ def manage_volunteer_requests(connector: Firestore):
     # Cargar solicitudes de voluntarios según el estado seleccionado
     volunteer_requests = connector.query_collection('volunteer_request', [('status', '==', selected_status)])
     
-    # Crear lista de voluntarios para selección
     volunteer_list = [f"{req.data.get('first_name')} {req.data.get('last_name')} - {req.data.get('email')}" for req in volunteer_requests]
     
     selected_volunteer = st.selectbox("Seleccione una solicitud para revisar:", volunteer_list)
@@ -101,7 +105,6 @@ def manage_volunteer_requests(connector: Firestore):
                 if st.button("Denegar solicitud", use_container_width=True, disabled=selected_status == 'Denied'):
                     deny_request(connector, selected_request.data.get('cloud_id'))
 
-            # Botón para enviar email
             email_button_disabled = selected_status == 'Pending' or selected_request.data.get('notification') == 'Send'
             if st.button("Enviar Email de Notificación", disabled=email_button_disabled, use_container_width=True):
                 send_notification_email(connector, selected_request.data)
@@ -112,12 +115,23 @@ def approve_request(connector: Firestore, cloud_id: str):
     
     # Actualizar el estado a 'Approved' y la notificación a 'Pending' en volunteer_request
     connector.update_document('volunteer_request', cloud_id, {'status': 'Approved', 'notification': 'Pending','user_role': 'Volunteer'})
+
+    #Update Google Sheets
+    last_update = CategoryUtils().get_current_date()
+    sheet = Sheets('1lAPcVR3e7MqUJDt2ys25eRY7ozu5HV61ZhWFYuMULOM','Be Volunteer')
+    sheet.replace_values(cloud_id,{'status': 'Approved', 'notification': 'Pending','user_role': 'Volunteer','last_update':last_update})
+
     st.rerun()
 
 def deny_request(connector: Firestore, cloud_id: str):
     connector.update_document('users_collection', cloud_id, {'user_role': 'Learner'})
     # Actualizar el estado a 'Denied' y la notificación a 'Pending' en volunteer_request
     connector.update_document('volunteer_request', cloud_id, {'status': 'Denied', 'notification': 'Pending','user_role': 'Learner'})
+    
+    #Update Google Sheets
+    last_update = CategoryUtils().get_current_date()
+    sheet = Sheets('1lAPcVR3e7MqUJDt2ys25eRY7ozu5HV61ZhWFYuMULOM','Be Volunteer')
+    sheet.replace_values(cloud_id,{'status': 'Denied', 'notification': 'Pending','user_role': 'Learner','last_update':last_update})
     st.rerun()
 
 def send_notification_email(connector: Firestore, volunteer_data: dict):
@@ -166,6 +180,11 @@ def send_notification_email(connector: Firestore, volunteer_data: dict):
     try:
         email_sender.send_custom_email(recipient_email, full_name, subject, content)
         connector.update_document('volunteer_request', volunteer_data['cloud_id'], {'notification': 'Send'})
+        
+        # Update Google Sheets
+        last_update = CategoryUtils().get_current_date()
+        sheet = Sheets('1lAPcVR3e7MqUJDt2ys25eRY7ozu5HV61ZhWFYuMULOM','Be Volunteer')
+        sheet.replace_values(volunteer_data['cloud_id'],{'notification': 'Send','last_update':last_update})
         st.success(f"Email enviado exitosamente a {full_name}")
         st.rerun()
     except Exception as e:

@@ -92,6 +92,7 @@ def send_to_sheets(data: List[List[str]]):
     try:
         sheet = Sheets('1lAPcVR3e7MqUJDt2ys25eRY7ozu5HV61ZhWFYuMULOM','Sign Up')
         sheet.create(data)
+        return True
     except Exception as e:
         st.error(f"Lo siento, ha ocurrido un error al enviar los datos: {str(e)}")
         return False

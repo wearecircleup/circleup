@@ -63,3 +63,56 @@ class CategoryUtils:
         utc_now = datetime.utcnow()
         colombia_date = utc_now - timedelta(hours=5)
         return colombia_date.strftime("%d-%m-%Y")
+    
+
+    @staticmethod
+    def markdown_design() -> str:
+        style = """
+        <style>
+            /* Ajustes generales */
+            .stApp {
+                max-width: 100%;
+                padding: 0.5rem;
+            }
+            
+            /* Inputs y selectores */
+            .stTextInput, .stSelectbox, .stSlider, .stDateInput {
+                max-width: 100%;
+            }
+            
+            /* Textos */
+            .stMarkdown {
+                font-size: 16px;
+                line-height: 1.5;
+            }
+            
+            /* Encabezados */
+            h1 { font-size: 23px; }
+            h2 { font-size: 22px; }
+            h3 { font-size: 20px; }
+            h4 { font-size: 18px; }
+            
+            /* Botones */
+            .stButton > button {
+                width: 100%;
+                margin-top: 0.5rem;
+                margin-bottom: 0.5rem;
+            }
+            
+            /* Gráficos y tablas */
+            .stPlot, .stDataFrame {
+                width: 100%;
+                overflow-x: auto;
+            }
+            
+            /* Media queries para ajustes adicionales en pantallas muy pequeñas */
+            @media screen and (max-width: 320px) {
+                .stMarkdown { font-size: 14px; }
+                h1 { font-size: 22px; }
+                h2 { font-size: 20px; }
+                h3 { font-size: 18px; }
+                h4 { font-size: 16px; }
+            }
+        </style>
+        """
+        return style
