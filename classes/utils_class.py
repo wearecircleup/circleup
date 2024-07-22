@@ -1,14 +1,14 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 @dataclass
 class CategoryUtils:
     @staticmethod
-    def time_to_category(time_str: str) -> str:
-        try:
-            time = datetime.strptime(time_str, "%H:%M")
-        except ValueError:
-            return "Formato inválido"
+    def time_to_category() -> str:
+        utc_now = datetime.utcnow()
+        colombia_time = utc_now - timedelta(hours=5)
+        
+        time = colombia_time.strftime("%H:%M")
 
         categories = [
             "00:00-01:59", "02:00-03:59", "04:00-05:59", "06:00-07:59",
@@ -18,10 +18,10 @@ class CategoryUtils:
 
         for category in categories:
             start, end = category.split("-")
-            start_time = datetime.strptime(start, "%H:%M")
-            end_time = datetime.strptime(end, "%H:%M")
+            start_time = datetime.strptime(start, "%H:%M").time()
+            end_time = datetime.strptime(end, "%H:%M").time()
             
-            if start_time <= time <= end_time:
+            if start_time <= colombia_time.time() <= end_time:
                 return category
 
         return "No encontrado"
@@ -49,13 +49,17 @@ class CategoryUtils:
                 return category
 
         return "No encontrado"
-    
+
     @staticmethod
-    def date_to_day_of_week(date_str: str) -> str:
-        try:
-            date = datetime.strptime(date_str, "%d-%m-%Y")
-            days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
-            return days[date.weekday()]
-        except ValueError:
-            return "Formato inválido"
-    
+    def date_to_day_of_week() -> str:
+        utc_now = datetime.utcnow()
+        colombia_date = utc_now - timedelta(hours=5)
+        
+        days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+        return days[colombia_date.weekday()]
+
+    @staticmethod
+    def get_current_date() -> str:
+        utc_now = datetime.utcnow()
+        colombia_date = utc_now - timedelta(hours=5)
+        return colombia_date.strftime("%d-%m-%Y")

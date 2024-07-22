@@ -70,10 +70,9 @@ def prepare_sheets_data(instance_data):
     utils = CategoryUtils()
     now = datetime.now()
     return [
-        now.strftime("%d-%m-%Y"),
-        utils.date_to_day_of_week(now.strftime("%d-%m-%Y")),
-        now.strftime("%H:%M"),
-        utils.time_to_category(now.strftime("%H:%M")),
+        utils.get_current_date(),
+        utils.date_to_day_of_week(),
+        utils.time_to_category(),
         instance_data.get('first_name', ''),
         instance_data.get('last_name', ''),
         instance_data.get('gender', ''),
