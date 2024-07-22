@@ -2,7 +2,7 @@ from dataclasses import dataclass, field, asdict
 from typing import Dict, Any, List, Optional
 from google.cloud import firestore
 from classes.users_class import Users
-from google.cloud.firestore_v1.base_query import FieldFilter, Or
+from google.cloud.firestore_v1.base_query import FieldFilter, Or, And
 
 @dataclass
 class FirestoreDocument:
@@ -61,16 +61,14 @@ class Firestore:
         """
         Realiza una consulta en una colección con filtros dados.
         """
-        query = self.db.collection(collection)
 
         filter_list = []
         for field, op, value in filters:
             filter_list.append(FieldFilter(field, op, value))
         
-        if filter_list:
-            query = query.where(filter=filter_list)
+        filters_summary = And(filters=filter_list)
+        docs = self.db.collection(collection).where(filter=filters_summary).stream()
         
-        docs = query.stream()
         return [FirestoreDocument(id=doc.id, data=doc.to_dict()) for doc in docs]
 
     def auth_firestore(self, email: str, password: str) -> Optional[Users]:

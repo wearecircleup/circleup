@@ -16,6 +16,7 @@ import gspread
 from google.oauth2.credentials import Credentials
 from google.oauth2 import service_account
 from typing import List
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 
 st.set_page_config(

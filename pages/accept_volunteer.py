@@ -5,6 +5,7 @@ from utils.body import html_banner
 from google.cloud import firestore
 from classes.firestore_class import Firestore
 from classes.email_class import Email
+from google.cloud.firestore_v1.base_query import FieldFilter
 
 st.set_page_config(
     page_title="Circle Up",
@@ -62,7 +63,7 @@ def manage_volunteer_requests(connector: Firestore):
     selected_status = st.selectbox("Seleccione el estado de las solicitudes:", status_options)
 
     # Cargar solicitudes de voluntarios según el estado seleccionado
-    volunteer_requests = connector.query_collection('volunteer_request', [('status', '==', selected_status)])
+    volunteer_requests = connector.query_collection('volunteer_request', [FieldFilter('status', '==', selected_status)])
     
     # Crear lista de voluntarios para selección
     volunteer_list = [f"{req.data.get('first_name')} {req.data.get('last_name')} - {req.data.get('email')}" for req in volunteer_requests]
