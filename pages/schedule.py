@@ -191,8 +191,20 @@ if age_appropriate:
 
                     utils = CategoryUtils()
 
-                    reminder = f"""El curso de {selected_request['course_name']} {'será en modalidad ' + selected_request['modality_proposal'].lower() if selected_request['modality_proposal'].lower() == 'virtual' else f'se realizará en {selected_request['place_proposal']}, {selected_request['city_proposal']}'}. Está diseñado para participantes de {selected_request['allowed_age']} años{f' y es recomendable que cuentes con {selected_request['prior_knowledge'].lower()}' if selected_request['prior_knowledge'].lower() != 'no aplica' else ''}. Seremos un grupo de {selected_request['min_audience']} a {selected_request['max_audience']} personas{f', así que no olvides {selected_request['tech_resources'].lower()}' if selected_request['tech_resources'].lower() != 'no aplica' else ''}. Este curso se encuentra dentro de las categorías de {selected_request['course_categories']}."""
-
+                    reminder = f"""El curso de {selected_request['course_name']} {
+                                                    'será en modalidad ' + selected_request['modality_proposal'].lower() 
+                                                    if selected_request['modality_proposal'].lower() == 'virtual' 
+                                                    else f"se realizará en {selected_request['place_proposal']}, {selected_request['city_proposal']}"
+                                                }. Está diseñado para participantes de {selected_request['allowed_age']} años{
+                                                    f" y es recomendable que cuentes con {selected_request['prior_knowledge'].lower()}" 
+                                                    if selected_request['prior_knowledge'].lower() != 'no aplica' 
+                                                    else ''
+                                                }. Seremos un grupo de {selected_request['min_audience']} a {selected_request['max_audience']} personas{
+                                                    f", así que no olvides {selected_request['tech_resources'].lower()}" 
+                                                    if selected_request['tech_resources'].lower() != 'no aplica' 
+                                                    else ''
+                                                }. Este curso se encuentra dentro de las categorías de {selected_request['course_categories']}."""
+                    
                     data_collection = {
                         'enrolled_at':utils.get_current_date(),
                         'week':utils.date_to_day_of_week(),
