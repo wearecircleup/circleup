@@ -172,7 +172,7 @@ def main():
             check_proposal = st.checkbox("Carta Propuesta Voluntario", key="check_proposal_form")
 
         st.title("2 Aspectos Logísticos")
-        st.info("Por favor, confirme los siguientes elementos para finalizar la configuración del curso")
+        st.info("Por favor, confirme los siguientes elementos para finalizar la configuración del curso", icon=":material/format_list_bulleted:")
 
         col1, col2 = st.columns(2)
         with col1:
