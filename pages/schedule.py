@@ -1,22 +1,13 @@
 import streamlit as st
 import pandas as pd
 from menu import menu
-from utils.body import unauthenticate_login
 from google.cloud import firestore
 import json
 from classes.utils_class import CategoryUtils
 from classes.spread_class import Sheets
 from classes.firestore_class import Firestore
-from datetime import datetime, date
-from utils.body import succefull_enrollment
 from typing import Dict, List
-import time
-import numpy as np
-import altair as alt
 from itertools import chain
-from collections import Counter
-from utils.form_options import age_range, topics_of_interest
-from utils.body import enrollment_warning, warning_unenroll, unenrolled_confirm, html_banner
 
 st.set_page_config(
     page_title="Circle Up",
@@ -42,33 +33,57 @@ def connector():
 
 @st.cache_data
 def get_course_data():
-    Conn = connector()
-    course_requests = Conn.query_collection('course_proposal', [('status', '==', 'Approved')])
-    courses_data = [doc.data for doc in course_requests]
-    dataset = pd.DataFrame(courses_data)
-    dataset.rename(columns={'cloud_id':'cloud_id_course'},inplace=True)
-    return dataset
+    try:
+        Conn = connector()
+        course_requests = Conn.query_collection('course_proposal', [('status', '==', 'Approved')])
+        courses_data = [doc.data for doc in course_requests]
+        dataset = pd.DataFrame(courses_data)
+        dataset.rename(columns={'cloud_id':'cloud_id_course'}, inplace=True)
+        return dataset
+    except Exception as e:
+        st.error(f"Lo siento, ha ocurrido un error al obtener los datos del curso: {str(e)}")
+        return pd.DataFrame(columns=[
+            'created_at', 'cloud_id_volunteer', 'first_name', 'last_name', 'gender', 'email',
+            'volunteer_profile', 'cloud_id', 'course_categories', 'course_name', 'course_objective',
+            'modality_proposal', 'min_audience', 'max_audience', 'allowed_age', 'city_proposal',
+            'place_proposal', 'start_date', 'devices_proposal', 'tech_resources', 'prior_knowledge',
+            'status', 'signed_concent', 'updated_at', 'notification'
+        ])
 
 @st.cache_data
 def get_intake_data():
-    Conn = connector()
-    course_requests = Conn.query_collection('intake_collection',[('cloud_id_user', '==', st.session_state.user_auth.cloud_id),
-                                                                ('status', '==', 'Enrrolled')])
-    courses_data = [doc.data for doc in course_requests]
-    dataset = pd.DataFrame(courses_data)
-    dataset.rename(columns={'cloud_id_course':'cloud_id_course'}, inplace=True)
-    return dataset
+    try:
+        Conn = connector()
+        course_requests = Conn.query_collection('intake_collection', [
+            ('cloud_id_user', '==', st.session_state.user_auth.cloud_id),
+            ('status', '==', 'Enrrolled')
+        ])
+        courses_data = [doc.data for doc in course_requests]
+        dataset = pd.DataFrame(courses_data)
+        return dataset
+    except Exception as e:
+        st.error(f"Lo siento, ha ocurrido un error al obtener los datos de inscripción: {str(e)}")
+        # Crear un DataFrame vacío con las columnas especificadas
+        return pd.DataFrame(columns=[
+            'enrolled_at', 'week', 'hour_range', 'cloud_id', 'cloud_id_user', 'cloud_id_volunteer',
+            'cloud_id_course', 'first_name', 'last_name', 'email', 'start_date', 'summary',
+            'attendance_record', 'email_notice', 'email_reminder', 'status', 'last_change'
+        ])
 
 def lock_data(field):
-    data_courses = get_course_data()
-    users_enrollments = get_intake_data()
-    enlistment = pd.merge(data_courses, users_enrollments, on=['cloud_id_course'], how='inner')
-    
-    categories = enlistment[field].str.split(',')
-    flattened_categories = chain.from_iterable(categories)
-    unique_categories = sorted(set(flattened_categories))
-
-    return unique_categories
+    try:
+        data_courses = get_course_data()
+        users_enrollments = get_intake_data()
+        enlistment = pd.merge(data_courses, users_enrollments, on=['cloud_id_course'], how='inner')
+        
+        categories = enlistment[field].str.split(',')
+        flattened_categories = chain.from_iterable(categories)
+        unique_categories = sorted(set(flattened_categories))
+        
+        return unique_categories
+    except Exception as e:
+        st.error(f"Lo siento, ha ocurrido un error al procesar los datos: {str(e)}")
+        return []
 
 def course_description(course):
     st.info(f"¡{st.session_state.user_auth.first_name.capitalize()}! Aquí tienes los detalles del curso.\n :blue[**{course['course_name']}**]", icon=":material/dynamic_form:")
@@ -349,12 +364,12 @@ st.title("Explora Nuestros Cursos")
 st.write("Bienvenido a nuestra plataforma de aprendizaje. Aquí podrás encontrar cursos diseñados para potenciar tus habilidades y conocimientos.")
 st.info("Todos los cursos duran :blue-background[**2 horas y no se repiten**]. Los :blue-background[**cupos son limitados**], así que :blue-background[**no esperes mucho**] para decidir.",icon=":material/attach_file:")
 
+if 'lock_courses' not in st.session_state:
+        st.session_state.lock_courses = lock_data('course_name')
+
 if 'confirmation_message' in st.session_state:
     st.success(st.session_state.confirmation_message,icon=":material/data_check:")
     del st.session_state.confirmation_message
-
-if 'lock_courses' not in st.session_state:
-    st.session_state.lock_courses = lock_data('course_name')
 
 if not st.session_state.show_explore and not st.session_state.show_manage:
     st.info("**Paso 0:** Elige qué quieres hacer",icon=":material/self_improvement:")
