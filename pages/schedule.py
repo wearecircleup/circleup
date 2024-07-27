@@ -253,7 +253,7 @@ def entry_unregister():
         else:
             st.info("Selecciona un curso de la lista para proceder con la cancelación.", icon=":material/ads_click:")
     elif not st.session_state.lock_courses:
-        st.warning("Actualmente :orange-background[no estás inscrito] en ningún curso. :orange[**Explora nuestras opciones de cursos disponibles.**]",icon=":material/pending_actions:")
+        st.warning("Actualmente :orange-background[no estás inscrito] en ningún curso. :orange[**Explora nuestras opciones de cursos disponibles.**] Si ya te registraste en un curso, lo verás en tu gestión de inscripciones en aproximadamente ~1 hora.", icon=":material/pending_actions:")
     else:
         st.warning("Por el momento no tenemos cursos disponibles para tu rango de edad en los que estés inscrito. Si crees que esto es un error, por favor contáctanos.", icon=":material/notifications:")
 
@@ -323,9 +323,9 @@ def entry_registration():
                             'cloud_id_user':st.session_state.user_auth.cloud_id,
                             'cloud_id_volunteer':selected_request['cloud_id_volunteer'],
                             'cloud_id_course':selected_request['cloud_id_course'],
-                            'first_name':selected_request['first_name'],
-                            'last_name':selected_request['last_name'],
-                            'email':selected_request['email'],
+                            'first_name':st.session_state.user_auth.first_name,
+                            'last_name':st.session_state.user_auth.last_name,
+                            'email':st.session_state.user_auth.email,
                             'start_date':selected_request['start_date'],
                             'summary': reminder,
                             'attendance_record':0,
