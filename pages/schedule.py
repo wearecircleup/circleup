@@ -179,7 +179,8 @@ def send_to_firebase(data: Dict):
         return False
 
 def enrollment_notice(data: Dict,selected_course):
-    st.session_state.confirmation_message = "Tu inscripción ha sido registrada exitosamente."
+    st.session_state.confirmation_message = ":green-background[Tu inscripción ha sido registrada exitosamente]. No te preocupes si aún no apareces en green[**Gestionar Inscripciones**], puede tardar ~1 hora. :green-background[Lo importante es que ya estás adentro y recibirás un email en ~5 min.]"
+
     st.session_state.show_explore = False
     
     cloud_id = send_to_firebase(data)
