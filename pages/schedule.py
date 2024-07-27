@@ -41,7 +41,6 @@ def get_course_data():
         dataset.rename(columns={'cloud_id':'cloud_id_course'}, inplace=True)
         return dataset
     except Exception as e:
-        st.error(f"Lo siento, ha ocurrido un error al obtener los datos del curso: {str(e)}")
         return pd.DataFrame(columns=[
             'created_at', 'cloud_id_volunteer', 'first_name', 'last_name', 'gender', 'email',
             'volunteer_profile', 'cloud_id', 'course_categories', 'course_name', 'course_objective',
@@ -62,8 +61,6 @@ def get_intake_data():
         dataset = pd.DataFrame(courses_data)
         return dataset
     except Exception as e:
-        st.error(f"Lo siento, ha ocurrido un error al obtener los datos de inscripción: {str(e)}")
-        # Crear un DataFrame vacío con las columnas especificadas
         return pd.DataFrame(columns=[
             'enrolled_at', 'week', 'hour_range', 'cloud_id', 'cloud_id_user', 'cloud_id_volunteer',
             'cloud_id_course', 'first_name', 'last_name', 'email', 'start_date', 'summary',
@@ -75,14 +72,12 @@ def lock_data(field):
         data_courses = get_course_data()
         users_enrollments = get_intake_data()
         enlistment = pd.merge(data_courses, users_enrollments, on=['cloud_id_course'], how='inner')
-        
         categories = enlistment[field].str.split(',')
         flattened_categories = chain.from_iterable(categories)
         unique_categories = sorted(set(flattened_categories))
         
         return unique_categories
     except Exception as e:
-        st.error(f"Lo siento, ha ocurrido un error al procesar los datos: {str(e)}")
         return []
 
 def course_description(course):
@@ -149,7 +144,6 @@ def send_to_sheets(data: List[List[str]]):
         sheet.create(data)
         return True
     except Exception as e:
-        st.error(f"Lo siento, ha ocurrido un error al enviar los datos: {str(e)}")
         return False
     
 @st.cache_data(ttl=3600,show_spinner=False)
@@ -161,7 +155,7 @@ def update_sheets(cloud_id):
         sheet.replace_values(cloud_id, updates)
         return True
     except Exception as e:
-        st.error(f"Lo siento, ha ocurrido un error al enviar los datos: {str(e)}")
+        
         return False
 
 @st.cache_data(ttl=3600,show_spinner=False)
@@ -172,7 +166,7 @@ def update_firebase(cloud_id):
         connector().update_document('intake_collection', cloud_id, updates)
         return True
     except Exception as e:
-        st.error(f"Lo siento, ha ocurrido un error al enviar los datos: {str(e)}")
+        
         return False
 
 @st.cache_data(ttl=3600,show_spinner=False)
@@ -181,7 +175,7 @@ def send_to_firebase(data: Dict):
         intake_data = connector().add_document('intake_collection',data)
         return intake_data.id
     except Exception as e:
-        st.error(f"Lo siento, ha ocurrido un error al enviar los datos: {str(e)}")
+        
         return False
 
 def enrollment_notice(data: Dict,selected_course):
