@@ -5,6 +5,7 @@ import pandas as pd
 from utils.body import (html_banner, pensum_email_file)
 from classes.email_class import Email
 from classes.pensum_class import PensumLoader
+from classes.utils_class import CategoryUtils
 from google.cloud import firestore
 
 st.set_page_config(
@@ -27,6 +28,7 @@ if 'show_html' not in st.session_state:
     st.session_state.show_html = False
 
 st.html(html_banner)
+st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)
 
 @st.cache_resource
 def firestore_client():

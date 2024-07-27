@@ -26,10 +26,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-
-st.markdown(CategoryUtils().markdown_design(), unsafe_allow_html=True)
-
-
+st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)
 
 if 'status_request' not in st.session_state:
     st.session_state.status_request = False
@@ -250,7 +247,7 @@ if submit_button and not st.session_state.form_submitted:
             st.session_state.profile_summary = get_profile_summary(form_data)
             st.session_state.markdown_output = data_anthropic(st.session_state.profile_summary)
         
-        st.success("¡Perfil enviado con éxito!")
+        st.success("¡Perfil enviado con éxito!", icon=":material/check_circle:")
         st.rerun()
 
 if st.session_state.form_submitted and st.session_state.markdown_output is not None:
@@ -258,8 +255,8 @@ if st.session_state.form_submitted and st.session_state.markdown_output is not N
     st.write("Las respuestas que se muestran a continuación son creadas para ti. Ahora vamos a leer cada una detalladamente, y es importante que estés muy atento para que podamos identificar lo que consideras que vale la pena enseñar a tu comunidad. Este contenido es creado con un modelo llamado Claude Sonnet 3.5 de Anthropic, y creemos que es bastante profesional, así que seguro será de utilidad.")
     
     idea1, idea2 = format_markdown_output(st.session_state.markdown_output)
-    st.info(idea1)
-    st.success(idea2)
+    st.info(idea1, icon=":material/lightbulb:")
+    st.success(idea2, icon=":material/star:")
 
     st.title("Selección de Propuesta")
     st.write("Ahora que ya tenemos un tema para presentarle a la comunidad, vamos a trabajar en el material de apoyo. Este material debe ser lo más estructurado posible y manejar un estándar para que todas las presentaciones de CircleUp tengan una identidad propia. En este punto, le entregaremos a Claude Sonnet 3.5 la idea para posteriormente evaluar el contenido.")
@@ -273,26 +270,26 @@ if st.session_state.form_submitted and st.session_state.markdown_output is not N
             st.session_state.table_data = table_data
             st.session_state.presentation_generated = True
         
-        st.success("¡Presentación generada con éxito!")
+        st.success("¡Presentación generada con éxito!", icon=":material/task_alt:")
         st.rerun()
     else:
-        st.info('Por favor, ingresa el tema de la presentación. Verifica antes de enviar.')
+        st.info('Por favor, ingresa el tema de la presentación. Verifica antes de enviar.', icon=":material/edit_note:")
 
     if st.session_state.presentation_generated:
         # st.table(st.session_state.table_data)
         # st.write([values for table in st.session_state.table_data for key, values in table.items() if key =='name'])
-        st.success("Presentación generada. Preparando envío a Google Sheets.")
+        st.success("Presentación generada. Preparando envío a Google Sheets.", icon=":material/cloud_upload:")
         if st.button("Enviar Google Sheets", use_container_width=True):
             with st.spinner("Enviando datos a Google Sheets..."):
                 sheet_data = [[row['description'] for row in st.session_state.table_data]]
                 success = send_to_sheets(sheet_data)
             
             if success:
-                st.success("¡Los datos de la presentación han sido enviados correctamente a Google Sheets!")
+                st.success("¡Los datos de la presentación han sido enviados correctamente a Google Sheets!", icon=":material/cloud_done:")
             else:
-                st.error("Hubo un problema al enviar los datos a Google Sheets. Por favor, inténtalo de nuevo más tarde.")
+                st.error("Hubo un problema al enviar los datos a Google Sheets. Por favor, inténtalo de nuevo más tarde.", icon=":material/error:")
 
 if not st.session_state.form_submitted:
-    st.info("Por favor, completa el formulario y haz clic en 'Enviar perfil' para ver los resultados.")
+    st.info("Por favor, completa el formulario y haz clic en **Enviar perfil** para ver los resultados.", icon=":material/info:")
 
 

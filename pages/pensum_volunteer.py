@@ -4,6 +4,7 @@ import pandas as pd
 from utils.body import (html_banner, pensum_email_file,verify_pensum_dialog)
 from classes.email_class import Email
 from classes.pensum_class import PensumLoader
+from classes.utils_class import CategoryUtils
 from utils.prompt_templates import pensum_feedback
 
 st.set_page_config(
@@ -19,6 +20,7 @@ if 'send_email' not in st.session_state:
 if 'verified' not in st.session_state:
     st.session_state.verified = True
 
+st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)
 st.html(html_banner)
 
 def anthropic_email(pensum,mail_server):

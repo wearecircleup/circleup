@@ -18,31 +18,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-st.markdown("""
-<style>
-    .stApp {
-        max-width: 100%;
-        padding: 1rem;
-    }
-    .stTextInput, .stSelectbox {
-        max-width: 100%;
-    }
-    p, .stMarkdown {
-        font-size: 14px;
-    }
-    h1 {
-        font-size: 24px;
-    }
-            
-    h2 {
-        font-size: 22px;
-    }
-            
-    h3 {
-        font-size: 22px;
-    }
-</style>
-""", unsafe_allow_html=True)
+st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)
 
 st.html(html_banner)
 
@@ -58,17 +34,20 @@ menu()
 
 def manage_volunteer_requests(connector: Firestore):
     st.title("Gestión de Solicitudes de Voluntarios")
-
+    st.info("Gestione las solicitudes de voluntarios pendientes, aprobadas y denegadas.", icon=":material/table_chart:")
     if st.button("Actualizar datos", use_container_width=True, type='secondary'):
         st.cache_data.clear()
         st.rerun()
-
+        
     # Lista de estados
     status_options = ["Pending", "Approved", "Denied"]
     selected_status = st.selectbox("Seleccione el estado de las solicitudes:", status_options)
 
     # Cargar solicitudes de voluntarios según el estado seleccionado
     volunteer_requests = connector.query_collection('volunteer_request', [('status', '==', selected_status)])
+    
+    if not volunteer_requests:
+        st.warning(f"No hay solicitudes con estado {selected_status}.", icon=":material/notifications:")
     
     volunteer_list = [f"{req.data.get('first_name')} {req.data.get('last_name')} - {req.data.get('email')}" for req in volunteer_requests]
     
@@ -101,9 +80,11 @@ def manage_volunteer_requests(connector: Firestore):
             with col1:
                 if st.button("Aprobar solicitud", use_container_width=True, disabled=selected_status == 'Approved'):
                     approve_request(connector, selected_request.data.get('cloud_id'))
+                    st.success(f"Solicitud aprobada con éxito.", icon=":material/check_circle:")
             with col2:
                 if st.button("Denegar solicitud", use_container_width=True, disabled=selected_status == 'Denied'):
                     deny_request(connector, selected_request.data.get('cloud_id'))
+                    st.success(f"Solicitud denegada con éxito.", icon=":material/cancel:")
 
             email_button_disabled = selected_status == 'Pending' or selected_request.data.get('notification') == 'Send'
             if st.button("Enviar Email de Notificación", disabled=email_button_disabled, use_container_width=True):
@@ -159,7 +140,7 @@ def send_notification_email(connector: Firestore, volunteer_data: dict):
         <p><strong>¡Bienvenido/a a Circle Up!</strong></p>
 
         <p>Atentamente,<br>
-        Circle Up Community ⚫ Team</p>
+        Circle Up Community ⚫</p>
         """
     else:
         subject = "Actualización sobre tu solicitud de voluntariado"
@@ -174,7 +155,7 @@ def send_notification_email(connector: Firestore, volunteer_data: dict):
         <p><strong>Te deseamos lo mejor en tus futuros esfuerzos de voluntariado.</strong></p>
 
         <p>Atentamente,<br>
-        Circle Up Community ⚫ Team</p>
+        Circle Up Community ⚫</p>
         """
 
     try:
@@ -185,7 +166,8 @@ def send_notification_email(connector: Firestore, volunteer_data: dict):
         last_update = CategoryUtils().get_current_date()
         sheet = Sheets('1lAPcVR3e7MqUJDt2ys25eRY7ozu5HV61ZhWFYuMULOM','Be Volunteer')
         sheet.replace_values(volunteer_data['cloud_id'],{'notification': 'Send','last_update':last_update})
-        st.success(f"Email enviado exitosamente a {full_name}")
+        st.info("Enviando email de notificación...", icon=":material/email:")
+        st.success(f"Email enviado exitosamente a {full_name}", icon=":material/email_check:")
         st.rerun()
     except Exception as e:
         st.error(f"Error al enviar el email: {str(e)}")

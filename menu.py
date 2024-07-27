@@ -24,25 +24,32 @@ def firestore_client():
     db = firestore.Client.from_service_account_info(key_firestore)
     return db
 
+import streamlit as st
+
 def authenticated_menu():
     tribes_synonyms = {'Admin':'Sentinel','Volunteer':'Nomads','Learner':'Crew'}
     st.session_state.role_synonym = tribes_synonyms[st.session_state.user_auth.user_role]
     if st.session_state.user_auth is not None and st.session_state.user_auth.user_status == 'Activo':
         
-        st.sidebar.page_link("app.py", label=f"Session @**{st.session_state.role_synonym}**")
-        st.sidebar.page_link("pages/profile.py", label=f"User Profile")
-        st.sidebar.page_link("pages/schedule.py", label=f"Enrollments")
+        st.sidebar.info(f"**{st.session_state.role_synonym}** Menu")
+
+        st.sidebar.page_link("app.py", label="Inicio", icon=":material/home:")
+        st.sidebar.page_link("pages/profile.py", label="Perfil", icon=":material/person:")
+        st.sidebar.page_link("pages/schedule.py", label="Explora Cursos", icon=":material/calendar_today:")
+
         if st.session_state.user_auth.user_role == 'Learner':
-            st.sidebar.page_link("pages/be_volunteer.py", label="Volunteer Now")
+            st.sidebar.page_link("pages/be_volunteer.py", label="Ser Voluntario", icon=":material/volunteer_activism:")
+
         if st.session_state.user_auth.user_role in ['Volunteer','Admin']:
-            st.sidebar.page_link("pages/pensum_volunteer.py", label=f"Pensum Template")
-            st.sidebar.page_link("pages/make_course.py", label=f"Brainstorm Ideas")
-            if st.session_state.user_auth.user_role == 'Admin':
-                st.sidebar.page_link("pages/pensum_admin.py",label="Pensum Review")
-                st.sidebar.page_link("pages/accept_volunteer.py",label="Volunteer Roles")
-                st.sidebar.page_link("pages/publish_course.py",label="Launch Course")
+            st.sidebar.info("**Nomad Side**")
+            st.sidebar.page_link("pages/make_course.py", label="Crear Ideas", icon=":material/lightbulb:")
+            st.sidebar.page_link("pages/publish_proposal.py", label="Proponer Curso", icon=":material/edit_document:")
 
-
+        if st.session_state.user_auth.user_role == 'Admin':
+            st.sidebar.info("**Sentinel Side**")
+            st.sidebar.page_link("pages/accept_volunteer.py", label="Gestión Voluntarios", icon=":material/group:")
+            st.sidebar.page_link("pages/publish_course.py", label="Revisar Cursos", icon=":material/menu_book:")
+            
 def unauthenticated_menu():
     st.sidebar.page_link("app.py", label="**Log In**")
     st.sidebar.page_link('pages/signup.py',label='**Sing Up**')

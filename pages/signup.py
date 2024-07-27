@@ -26,6 +26,8 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)
+
 @st.cache_resource
 def connector():
     key_firestore = json.loads(st.secrets["textkey"])

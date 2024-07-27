@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, time
 
 @dataclass
 class CategoryUtils:
@@ -8,21 +8,20 @@ class CategoryUtils:
         utc_now = datetime.utcnow()
         colombia_time = utc_now - timedelta(hours=5)
         
-        time = colombia_time.strftime("%H:%M")
+        current_time = colombia_time.time()
 
         categories = [
-            "00:00-01:59", "02:00-03:59", "04:00-05:59", "06:00-07:59",
-            "08:00-09:59", "10:00-11:59", "12:00-13:59", "14:00-15:59",
-            "16:00-17:59", "18:00-19:59", "20:00-21:59", "22:00-23:59"
+            ("00:00", "01:59"), ("02:00", "03:59"), ("04:00", "05:59"), ("06:00", "07:59"),
+            ("08:00", "09:59"), ("10:00", "11:59"), ("12:00", "13:59"), ("14:00", "15:59"),
+            ("16:00", "17:59"), ("18:00", "19:59"), ("20:00", "21:59"), ("22:00", "23:59")
         ]
 
-        for category in categories:
-            start, end = category.split("-")
+        for start, end in categories:
             start_time = datetime.strptime(start, "%H:%M").time()
             end_time = datetime.strptime(end, "%H:%M").time()
             
-            if start_time <= colombia_time.time() <= end_time:
-                return category
+            if start_time <= current_time <= end_time:
+                return f"{start}-{end}"
 
         return "No encontrado"
 

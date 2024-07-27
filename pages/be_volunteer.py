@@ -19,24 +19,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-st.markdown("""
-<style>
-    .stApp {
-        max-width: 100%;
-        padding: 1rem;
-    }
-    .stTextInput, .stSelectbox {
-        max-width: 100%;
-    }
-    p, .stMarkdown {
-        font-size: 14px;
-    }
-    h1 {
-        font-size: 24px;
-    }
-</style>
-""", unsafe_allow_html=True)
-
+st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)
 st.html(html_banner)
 
 @st.cache_resource

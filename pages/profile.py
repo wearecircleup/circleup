@@ -7,6 +7,7 @@ from utils.form_options import skills, how_to_learn
 import json
 from google.cloud import firestore
 from classes.firestore_class import Firestore
+from classes.utils_class import CategoryUtils
 from dataclasses import asdict
 
 st.set_page_config(
@@ -15,6 +16,8 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)
 
 if 'updates_confirmation' not in st.session_state:
     st.session_state.updates_confirmation = False
@@ -123,17 +126,17 @@ def form_update_profile():
 
 def accesse_granted():
     profile_warning = """
-    :blue[**Mantén tu perfil al día para una experiencia óptima en Circle Up Community**]. Actualizar tu información es rápido y sencillo, 
+    Actualizar tu información es rápido y sencillo, 
     y asegura que recibas contenido y oportunidades acordes a tus intereses y necesidades actuales. Si tienes alguna pregunta o 
     necesitas asistencia, los **Sentinel** están siempre disponibles para ofrecerte su apoyo. ¡No dudes en actualizar tus datos o contactarnos!
 
     """
+    st.info(f"Mantén tu perfil al día para una experiencia óptima en **Circle Up Community**",icon=":material/done_all:")
     st.markdown(profile_warning)
     st.subheader('Circle Up ⚫ Actualizar Perfil')
     with st.expander(f"**Perfil @{st.session_state.user_auth.first_name.capitalize()}** | Actualización de Información",expanded=True):
         form_update_profile()
     
-
 try:
     if st.session_state.user_auth is not None and st.session_state.user_auth.user_status == 'Activo':
         st.html(html_banner)
