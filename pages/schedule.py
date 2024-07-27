@@ -56,6 +56,7 @@ def get_intake_data():
                                                                 ('status', '==', 'Enrrolled')])
     courses_data = [doc.data for doc in course_requests]
     dataset = pd.DataFrame(courses_data)
+    dataset.rename(columns={'cloud_id_course':'cloud_id_course'}, inplace=True)
     return dataset
 
 def lock_data(field):
