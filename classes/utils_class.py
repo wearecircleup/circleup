@@ -68,54 +68,51 @@ class CategoryUtils:
     def markdown_design() -> str:
         style = """
         <style>
-        /* Ajustes generales */
-        .stApp {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 1rem;
-        }
-        
-        /* Inputs y selectores */
-        .stTextInput, .stSelectbox, .stSlider, .stDateInput {
-            max-width: 100%;
-        }
-        
-        /* Textos */
-        .stMarkdown {
-            font-size: 16px;
-            line-height: 1.6;
-        }
-        
-        /* Encabezados */
-        h1 { font-size: 1.25rem; }
-        h2 { font-size: 1.15rem; }
-        h3 { font-size: 1.0rem; }
-        h4 { font-size: 0.8rem; }
-    
-
-        @media (max-width: 768px) {
-            .stMarkdown { font-size: 0.8rem !important; }
-            h1 { font-size: 1.75rem !important; }
-            h2 { font-size: 1.50rem !important; }
-            h3 { font-size: 1.15rem !important; }
-            h4 { font-size: 1.1rem !important; }
-
-            p {
-                font-size: 0.8rem !important;
+            /* Estilos base */
+            .stMarkdown { font-size: 16px; line-height: 1.6; }
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.8rem; }
+            h3 { font-size: 1.6rem; }
+            h4 { font-size: 1.4rem; }
+            p { font-size: 1rem; }
+            
+            /* Pantallas medianas (992px a 1199px) */
+            @media screen and (max-width: 1199px) and (min-width: 992px) {
+                .stMarkdown { font-size: 15px; }
+                h1 { font-size: 1.9rem; }
+                h2 { font-size: 1.7rem; }
+                h3 { font-size: 1.5rem; }
+                h4 { font-size: 1.3rem; }
             }
-        }
-        
-        @media (max-width: 480px) {
-            .stMarkdown { font-size: 0.5rem; }
-            h1 { font-size: 1.25rem !important; }
-            h2 { font-size: 1.15rem !important; }
-            h3 { font-size: 1.0rem !important; }
-            h4 { font-size: 0.8rem !important; }
-
-            p {
-                font-size: 0.5rem !important;
+            
+            /* Tablets (768px a 991px) */
+            @media screen and (max-width: 991px) and (min-width: 768px) {
+                .stMarkdown { font-size: 14px; }
+                h1 { font-size: 1.8rem; }
+                h2 { font-size: 1.6rem; }
+                h3 { font-size: 1.4rem; }
+                h4 { font-size: 1.2rem; }
             }
-        }
+            
+            /* Móviles grandes (576px a 767px) */
+            @media screen and (max-width: 767px) and (min-width: 576px) {
+                .stMarkdown { font-size: 12px; }
+                h1 { font-size: 1.4rem; }
+                h2 { font-size: 1.2rem; }
+                h3 { font-size: 1rem; }
+                h4 { font-size: 0.9rem; }
+                p { font-size: 0.8rem; }
+            }
+            
+            /* Móviles pequeños (hasta 575px) */
+            @media screen and (max-width: 575px) {
+                .stMarkdown { font-size: 8px; }
+                h1 { font-size: 1rem; }
+                h2 { font-size: 0.9rem; }
+                h3 { font-size: 0.8rem; }
+                h4 { font-size: 0.75rem; }
+                p { font-size: 0.5rem; }
+            }
         </style>
         """
         return style
