@@ -68,51 +68,12 @@ class CategoryUtils:
     def markdown_design() -> str:
         style = """
         <style>
-            /* Estilos base */
-            .stMarkdown { font-size: 16px; line-height: 1.6; }
-            h1 { font-size: 2rem; }
-            h2 { font-size: 1.8rem; }
-            h3 { font-size: 1.6rem; }
-            h4 { font-size: 1.4rem; }
-            p { font-size: 1rem; }
-            
-            /* Pantallas medianas (992px a 1199px) */
-            @media screen and (max-width: 1199px) and (min-width: 992px) {
-                .stMarkdown { font-size: 15px; }
-                h1 { font-size: 1.9rem; }
-                h2 { font-size: 1.7rem; }
-                h3 { font-size: 1.5rem; }
-                h4 { font-size: 1.3rem; }
-            }
-            
-            /* Tablets (768px a 991px) */
-            @media screen and (max-width: 991px) and (min-width: 768px) {
-                .stMarkdown { font-size: 14px; }
-                h1 { font-size: 1.8rem; }
-                h2 { font-size: 1.6rem; }
-                h3 { font-size: 1.4rem; }
-                h4 { font-size: 1.2rem; }
-            }
-            
-            /* Móviles grandes (576px a 767px) */
-            @media screen and (max-width: 767px) and (min-width: 576px) {
-                .stMarkdown { font-size: 12px; }
-                h1 { font-size: 1.4rem; }
-                h2 { font-size: 1.2rem; }
-                h3 { font-size: 1rem; }
-                h4 { font-size: 0.9rem; }
-                p { font-size: 0.8rem; }
-            }
-            
-            /* Móviles pequeños (hasta 575px) */
-            @media screen and (max-width: 575px) {
-                .stMarkdown { font-size: 8px; }
-                h1 { font-size: 1rem; }
-                h2 { font-size: 0.9rem; }
-                h3 { font-size: 0.8rem; }
-                h4 { font-size: 0.75rem; }
-                p { font-size: 0.5rem; }
-            }
+            .stMarkdown { font-size: 0.875rem; line-height: 1.6; }
+            h1 { font-size: 1.5rem; }
+            h2 { font-size: 1.25rem; }
+            h3 { font-size: 1rem; }
+            h4 { font-size: 0.875rem; }
+            p { font-size: 0.75rem; }
         </style>
         """
         return style
