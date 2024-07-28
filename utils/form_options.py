@@ -30,7 +30,12 @@ agreement_options = [
     'Rechazo'
 ]
 
-duration_options = ["2 Hr.","4 Hr.","6 Hr.","8 Hr."]
+duration_options = [
+                    "2 Hr."
+                    # "4 Hr.",
+                    # "6 Hr.",
+                    # "8 Hr."
+                    ]
 
 modality = ['Virtual', 'Presencial']
 

@@ -8,6 +8,7 @@ from classes.spread_class import Sheets
 from classes.firestore_class import Firestore
 from typing import Dict, List
 from itertools import chain
+import time
 
 st.set_page_config(
     page_title="Circle Up",
@@ -31,7 +32,7 @@ def connector():
     Conn = Firestore(db)
     return Conn
 
-@st.cache_data
+@st.cache_data(ttl=1800, show_spinner=False)
 def get_course_data():
     try:
         Conn = connector()
@@ -49,7 +50,6 @@ def get_course_data():
             'status', 'signed_concent', 'updated_at', 'notification'
         ])
 
-@st.cache_data
 def get_intake_data():
     try:
         Conn = connector()
@@ -137,7 +137,6 @@ def course_description(course):
 def get_uniques(df, field):
     return df[field].str.split(',', expand=True).stack().unique().tolist()
 
-@st.cache_data(ttl=3600,show_spinner=False)
 def send_to_sheets(data: List[List[str]]):
     try:
         sheet = Sheets('1c_Pjefz-dtpBI2Yq6iPvPnSC5IkkWh7eCmdWaG39tzw','Enrollment')
@@ -146,7 +145,6 @@ def send_to_sheets(data: List[List[str]]):
     except Exception as e:
         return False
     
-@st.cache_data(ttl=3600,show_spinner=False)
 def update_sheets(cloud_id):
     last_update = CategoryUtils().get_current_date()
     updates = {'attendance_record': 0, 'email_notice': 'Pending','email_reminder': 0,'status':'Unenrrolled','last_change':last_update}
@@ -158,7 +156,6 @@ def update_sheets(cloud_id):
         
         return False
 
-@st.cache_data(ttl=3600,show_spinner=False)
 def update_firebase(cloud_id):
     last_update = CategoryUtils().get_current_date()
     updates = {'attendance_record': 0, 'email_notice': 'Pending','email_reminder': 0,'status':'Unenrrolled','last_change':last_update}
@@ -169,32 +166,48 @@ def update_firebase(cloud_id):
         
         return False
 
-@st.cache_data(ttl=3600,show_spinner=False)
 def send_to_firebase(data: Dict):
     try:
-        intake_data = connector().add_document('intake_collection',data)
+        intake_data = connector().add_document('intake_collection', data)
         return intake_data.id
     except Exception as e:
-        
         return False
 
-def enrollment_notice(data: Dict,selected_course):
-    st.session_state.confirmation_message = ":green-background[Tu inscripción ha sido registrada exitosamente]. No te preocupes si aún no apareces en green[**Gestionar Inscripciones**], puede tardar ~1 hora. :green-background[Lo importante es que ya estás adentro y recibirás un email en ~5 min.]"
+def enrollment_notice(data: Dict, selected_course):
+    st.session_state.confirmation_message = ":green-background[Tu inscripción ha sido registrada exitosamente]. Ahora aparecerás en :green[**Gestionar Inscripciones**]. :green-background[Recibirás un email en ~5 min.]"
 
     st.session_state.show_explore = False
     
     cloud_id = send_to_firebase(data)
     data['cloud_id'] = cloud_id 
     sheet_entry = [list(data.values())]
-    send_to_sheets(sheet_entry)
+
+    with st.spinner("Guardando tu inscripción. Este proceso tardará ~20 segs...\n\n"
+                    "1. Vas a recibir un email en ~5min.\n"
+                    "2. Si no recibes el email, escribe a wearecircleup@gmail.com\n"
+                    "3. Si quieres donar o ayudar, escribe a +57 3046714626"):
+        
+        time.sleep(12)
+        send_to_sheets(sheet_entry)
+
+    st.session_state.lock_courses = lock_data('course_name')    
     st.rerun()
 
 def unenrollment_notice(cloud_id: str, selected_course):
-    st.session_state.lock_courses = [course for course in st.session_state.lock_courses if course != selected_course]
-    st.session_state.confirmation_message = f":green-background[Inscripción cancelada] :green[**{selected_course}**]. Se reflejará en el sistema en ~1 min. Si deseas inscribirte de nuevo, por favor intentalo en al menos ~1 hora."
+    st.session_state.confirmation_message = f":green-background[**Inscripción cancelada**] para :green[**{selected_course}**]. :green-background[**El cambio es inmediato**]. Puedes volver a inscribirte en cualquier momento, pero ten en cuenta que los cupos pueden completarse rápidamente."
+
     st.session_state.show_manage = False
     update_firebase(cloud_id)
-    update_sheets(cloud_id)
+
+    with st.spinner("Actualizando tu inscripción. Este proceso tardará ~20 segs...\n\n"
+                    "1. Vas a recibir un email en ~5min.\n"
+                    "2. Si no recibes el email, escribe a wearecircleup@gmail.com\n"
+                    "3. Si quieres donar o ayudar, escribe a +57 3046714626"):
+        
+        time.sleep(12)
+        update_sheets(cloud_id)
+
+    st.session_state.lock_courses = lock_data('course_name')
     st.rerun()
 
 def show_explore():
@@ -209,54 +222,53 @@ def entry_unregister():
     data_courses = get_course_data()
     intake_courses = get_intake_data()
 
-    data_courses = data_courses[data_courses['course_name'].isin(set(st.session_state.lock_courses))]
-
     user_age = CategoryUtils().age_to_category(st.session_state.user_auth.dob)
-
     age_appropriate = data_courses['allowed_age'].apply(lambda x: user_age in x.split(',')).any()
 
+    course_options = list(set(st.session_state.lock_courses))
+
     if age_appropriate:
-        st.warning("**¿Estás seguro de que deseas cancelar tu inscripción en algún curso?** :orange[**Esta acción no se puede deshacer.**]", icon=":material/shadow_minus:")
+        if course_options:
+            st.warning("**¿Estás seguro de que deseas cancelar tu inscripción en algún curso?** :orange[**Esta acción no se puede deshacer.**]", icon=":material/shadow_minus:")
 
-        st.info("**Paso 1:** Selecciona el curso que deseas cancelar", icon=":material/ads_click:")
-        course_options = list(set(st.session_state.lock_courses))
-        selected_course = st.selectbox(
-            "Elige el curso que quieres cancelar:",
-            options=course_options,
-            index=None,
-            placeholder='Seleccionar Curso'
-        )
+            st.info("**Paso 1:** Selecciona el curso que deseas cancelar", icon=":material/ads_click:")
+            selected_course = st.selectbox(
+                "Elige el curso que quieres cancelar:",
+                options=course_options,
+                index=None,
+                placeholder='Seleccionar Curso'
+            )
 
-        if selected_course:
-            selected_request = data_courses[data_courses['course_name'] == selected_course].iloc[0]
-            
-            if not selected_request.empty:
-
-                filter_ids = data_courses[(data_courses['course_name'] == selected_course)][['cloud_id_course','cloud_id_volunteer']]
-                course_definition = filter_ids.to_dict(orient='records')[0]
-
-                volunter_id = intake_courses['cloud_id_volunteer'] == course_definition['cloud_id_volunteer']
-                course_id = intake_courses['cloud_id_course'] == course_definition['cloud_id_course']
+            if selected_course:
+                selected_request = data_courses[data_courses['course_name'] == selected_course].iloc[0]
                 
-                enrollment_id = intake_courses[(volunter_id) & (course_id)]['cloud_id']
-                enrollment_id = str(enrollment_id.iloc[0])
+                if not selected_request.empty:
 
-                st.write("Aquí tienes la información del curso que has seleccionado para cancelar")
-                course_description(selected_request)
+                    filter_ids = data_courses[(data_courses['course_name'] == selected_course)][['cloud_id_course','cloud_id_volunteer']]
+                    course_definition = filter_ids.to_dict(orient='records')[0]
 
-                st.error("**¿Estás segur@ de que deseas cancelar tu inscripción en este curso?**", icon=":material/delete:")
-                if st.button('Cancelar Inscripción', type='secondary', use_container_width=True):
-                    unenrollment_notice(enrollment_id,selected_course)
-                    st.success(st.session_state.confirmation_message,icon=":material/data_check:")
+                    volunter_id = intake_courses['cloud_id_volunteer'] == course_definition['cloud_id_volunteer']
+                    course_id = intake_courses['cloud_id_course'] == course_definition['cloud_id_course']
+                    
+                    enrollment_id = intake_courses[(volunter_id) & (course_id)]['cloud_id']
+                    enrollment_id = str(enrollment_id.iloc[0])
+
+
+                    st.write("Aquí tienes la información del curso que has seleccionado para cancelar")
+                    course_description(selected_request)
+
+                    st.error("**¿Estás segur@ de que deseas cancelar tu inscripción en este curso?**", icon=":material/delete:")
+                    if st.button('Cancelar Inscripción', type='secondary', use_container_width=True):
+                        unenrollment_notice(enrollment_id,selected_course)
+                        st.success(st.session_state.confirmation_message,icon=":material/data_check:")
 
             else:
-                st.error("Ocurrió un error al obtener la información del curso. Por favor, intenta de nuevo.")
+                st.info("Selecciona un curso de la lista para proceder con la cancelación.", icon=":material/ads_click:")
         else:
-            st.info("Selecciona un curso de la lista para proceder con la cancelación.", icon=":material/ads_click:")
-    elif not st.session_state.lock_courses:
-        st.warning("Actualmente :orange-background[no estás inscrito] en ningún curso. :orange[**Explora nuestras opciones de cursos disponibles.**] Si ya te registraste en un curso, lo verás en tu gestión de inscripciones en aproximadamente ~1 hora.", icon=":material/pending_actions:")
+            st.error("Actualmente :red-background[no estás inscrito] en ningún curso. :red[**Explora nuestras opciones de cursos disponibles.**] Si ya te registraste en un curso, lo verás en tu gestión de inscripciones en aproximadamente ~1 hora.", icon=":material/pending_actions:")
     else:
-        st.warning("Por el momento no tenemos cursos disponibles para tu rango de edad en los que estés inscrito. Si crees que esto es un error, por favor contáctanos.", icon=":material/notifications:")
+        st.warning("Por el momento no tenemos cursos disponibles para ti. Si crees que esto es un error, por favor contáctanos a wearecircleup@gmail.com.", icon=":material/notifications:")
+
 
     if st.button("Volver al menú principal", type="secondary"):
         st.session_state.show_manage = False
@@ -266,9 +278,7 @@ def entry_registration():
 
     data_courses = get_course_data()
     user_age = CategoryUtils().age_to_category(st.session_state.user_auth.dob)
-
     age_appropriate = data_courses['allowed_age'].apply(lambda x: user_age in x.split(',')).any()
-
     if age_appropriate:
         st.write("Entonces, revisemos los siguientes pasos para explorar y registrarte en los cursos.")
 
@@ -357,7 +367,7 @@ def entry_registration():
 
 st.title("Explora Nuestros Cursos")
 st.write("Bienvenido a nuestra plataforma de aprendizaje. Aquí podrás encontrar cursos diseñados para potenciar tus habilidades y conocimientos.")
-st.info("Todos los cursos duran :blue-background[**2 horas y no se repiten**]. Los :blue-background[**cupos son limitados**], así que :blue-background[**no esperes mucho**] para decidir.",icon=":material/attach_file:")
+st.warning(":orange[**Duración Cursos**] :orange-background[2 horas maximo], sesión exclusiva y :orange-background[Cupos limitados]", icon=":material/attach_file:")
 
 if 'lock_courses' not in st.session_state:
         st.session_state.lock_courses = lock_data('course_name')
@@ -367,7 +377,7 @@ if 'confirmation_message' in st.session_state:
     del st.session_state.confirmation_message
 
 if not st.session_state.show_explore and not st.session_state.show_manage:
-    st.info("**Paso 0:** Elige qué quieres hacer",icon=":material/self_improvement:")
+    st.info("**Paso 0:** :blue-background[¿Qué te gustaría hacer?] En :blue[**Explorar Cursos**] puedes registrarte en cursos que te interesen, y en :blue[**Gestionar Inscripciones**] puedes revisar tus cursos inscritos o cancelar tu participación.", icon=":material/self_improvement:")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -382,5 +392,6 @@ if st.session_state.show_explore:
 
 if st.session_state.show_manage:
     entry_unregister()
+
 
 menu()

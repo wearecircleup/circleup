@@ -57,7 +57,7 @@ def manage_volunteer_requests(connector: Firestore):
 
     volunteer_requests = connector.query_collection('course_proposal', [('status', '==', selected_status)])
     
-    volunteer_list = [f"{req.data.get('first_name')} {req.data.get('last_name')} - {req.data.get('email')}" for req in volunteer_requests]
+    volunteer_list = [f"{req.data.get('cloud_id')} - {req.data.get('email')}" for req in volunteer_requests]
     
     if not volunteer_requests:
         st.warning(f"No hay propuestas con estado {selected_status}.", icon=":material/notifications:")

@@ -136,7 +136,6 @@ def sheets_agreement(data: List[List[str]]):
         st.error(f"Lo siento, ha ocurrido un error al enviar los datos: {str(e)}")
         return False
 
-
 @st.cache_data(ttl=3600,show_spinner=False)
 def sheets_proposal(data: List[List[str]]):
     try:
@@ -146,7 +145,6 @@ def sheets_proposal(data: List[List[str]]):
     except Exception as e:
         st.error(f"Lo siento, ha ocurrido un error al enviar los datos: {str(e)}")
         return False
-
 
 def main():
     st.title("Módulo Final: Preparación para el Lanzamiento del Curso")
@@ -309,7 +307,7 @@ def main():
                 missing_fields.append(f"Consentimiento {i+1}")
 
         if missing_fields:
-            st.error(f"Por favor, complete los siguientes campos: {', '.join(missing_fields)}", icon=":material/alert:")
+            st.error(f"Por favor, complete los siguientes campos: {', '.join(missing_fields)}", icon=":material/notifications:")
         else:
             volunteer_data = {key: value for key, value in st.session_state.items() if key.endswith("_form")}
             st.success("Todos los campos han sido completados correctamente.", icon=":material/check_circle:")
@@ -357,24 +355,24 @@ else:
     """)
 
     st.title("1. Confirmación de Circle Up Community")
-    st.info("Circle Up Community ha revisado y está de acuerdo con los siguientes elementos", icon=":material/clipboard_check:")
-    st.success("¡Tarea completada! Tu progreso ha sido guardado.", icon=":material/save:")
+    st.info("Circle Up Community ha revisado y está de acuerdo con los siguientes elementos", icon=":material/lists:")
+    st.success("¡Tarea completada! Tu progreso ha sido guardado.", icon=":material/library_add_check:")
 
     st.title("2 Aspectos Logísticos")
-    st.info("Por favor, confirme los siguientes elementos para finalizar la configuración del curso", icon=":material/settings:")
-    st.success("¡Tarea completada! Tu progreso ha sido guardado.")
+    st.info("Por favor, confirme los siguientes elementos para finalizar la configuración del curso", icon=":material/lists:")
+    st.success("¡Tarea completada! Tu progreso ha sido guardado.", icon=":material/library_add_check:")
     
     st.title("3. Requisitos de Participación")
-    st.info("Especifique claramente los requisitos mínimos para los participantes")
-    st.success("¡Tarea completada! Tu progreso ha sido guardado.")
+    st.info("Especifique claramente los requisitos mínimos para los participantes", icon=":material/lists:")
+    st.success("¡Tarea completada! Tu progreso ha sido guardado.", icon=":material/library_add_check:")
 
     st.title("4. Información General del Curso")
-    st.info("Por favor, complete la siguiente información general sobre el curso")
-    st.success("¡Tarea completada! Tu progreso ha sido guardado.")
+    st.info("Por favor, complete la siguiente información general sobre el curso", icon=":material/lists:")
+    st.success("¡Tarea completada! Tu progreso ha sido guardado.", icon=":material/library_add_check:")
 
     st.title("5. Consentimiento General")
-    st.info("El voluntario debe leer detenidamente y aceptar los siguientes términos y condiciones")
-    st.success("¡Tarea completada! Tu progreso ha sido guardado.")
+    st.info("El voluntario debe leer detenidamente y aceptar los siguientes términos y condiciones", icon=":material/lists:")
+    st.success("¡Tarea completada! Tu progreso ha sido guardado.", icon=":material/library_add_check:")
 
     st.info("""
     **Último paso: Firma del documento**
@@ -382,12 +380,9 @@ else:
 
     Enviar el documento es súper fácil y rápido. 
     En solo unos clics estarás listo para comenzar. 
-    """)
+    """, icon=":material/signature:")
     
-    st.success("""
-    Gracias por ser parte de este proceso de co-creación.
-    Tu contribución es fundamental para nuestro éxito colectivo.
-    """)
+    st.success("Gracias por ser parte de este proceso de co-creación. Tu contribución es fundamental para nuestro éxito colectivo.", icon=":material/draw:")
 
 menu()
 
