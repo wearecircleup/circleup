@@ -68,73 +68,54 @@ class CategoryUtils:
     def markdown_design() -> str:
         style = """
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap');
+        /* Ajustes generales */
+        .stApp {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        
+        /* Inputs y selectores */
+        .stTextInput, .stSelectbox, .stSlider, .stDateInput {
+            max-width: 100%;
+        }
+        
+        /* Textos */
+        .stMarkdown {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        
+        /* Encabezados */
+        h1 { font-size: 1.25rem; }
+        h2 { font-size: 1.15rem; }
+        h3 { font-size: 1.0rem; }
+        h4 { font-size: 0.8rem; }
+    
 
-            html, body, [class*="css"] {
-                font-family: 'Source Code Pro', monospace;
-            }
+        @media (max-width: 768px) {
+            .stMarkdown { font-size: 0.8rem !important; }
+            h1 { font-size: 1.75rem !important; }
+            h2 { font-size: 1.50rem !important; }
+            h3 { font-size: 1.15rem !important; }
+            h4 { font-size: 1.1rem !important; }
 
-            /* Ajustes generales */
-            .stApp {
-                max-width: 1200px;
-                margin: 0 auto;
-                padding: 0.8rem;
+            p {
+                font-size: 0.8rem !important;
             }
-            
-            /* Inputs y selectores */
-            .stTextInput, .stSelectbox, .stSlider, .stDateInput {
-                max-width: 100%;
-                font-size: 0.85rem;
+        }
+        
+        @media (max-width: 480px) {
+            .stMarkdown { font-size: 0.5rem; }
+            h1 { font-size: 1.25rem !important; }
+            h2 { font-size: 1.15rem !important; }
+            h3 { font-size: 1.0rem !important; }
+            h4 { font-size: 0.8rem !important; }
+
+            p {
+                font-size: 0.5rem !important;
             }
-            
-            /* Textos */
-            .stMarkdown {
-                font-size: 13px;
-                line-height: 1.5;
-            }
-            
-            /* Encabezados */
-            h1 { font-size: 1.75rem; }
-            h2 { font-size: 1.5rem; }
-            h3 { font-size: 1.25rem; }
-            h4 { font-size: 1.1rem; }
-            
-            /* Botones */
-            .stButton > button {
-                width: auto;
-                min-width: 160px;
-                margin: 0.4rem 0;
-                padding: 0.3rem 0.7rem;
-                font-size: 0.8rem;
-            }
-            
-            /* Gráficos y tablas */
-            .stPlot, .stDataFrame {
-                width: 100%;
-                overflow-x: auto;
-            }
-            
-            /* Media queries para ajustes en diferentes tamaños de pantalla */
-            @media screen and (max-width: 768px) {
-                .stApp { padding: 0.4rem; }
-                .stMarkdown { font-size: 12px; }
-                h1 { font-size: 1.5rem; }
-                h2 { font-size: 1.3rem; }
-                h3 { font-size: 1.1rem; }
-                h4 { font-size: 0.95rem; }
-                .stButton > button { 
-                    width: 100%; 
-                    font-size: 0.8rem;
-                }
-            }
-            
-            @media screen and (max-width: 480px) {
-                .stMarkdown { font-size: 11px; }
-                h1 { font-size: 1.3rem; }
-                h2 { font-size: 1.15rem; }
-                h3 { font-size: 1rem; }
-                h4 { font-size: 0.9rem; }
-            }
+        }
         </style>
         """
         return style
