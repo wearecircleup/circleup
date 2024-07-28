@@ -68,50 +68,62 @@ class CategoryUtils:
     def markdown_design() -> str:
         style = """
         <style>
-            /* Ajustes generales */
-            .stApp {
-                max-width: 100%;
-                padding: 0.5rem;
-            }
-            
-            /* Inputs y selectores */
-            .stTextInput, .stSelectbox, .stSlider, .stDateInput {
-                max-width: 100%;
-            }
-            
-            /* Textos */
-            .stMarkdown {
-                font-size: 16px;
-                line-height: 1.5;
-            }
-            
-            /* Encabezados */
-            h1 { font-size: 23px; }
-            h2 { font-size: 22px; }
-            h3 { font-size: 20px; }
-            h4 { font-size: 18px; }
-            
-            /* Botones */
-            .stButton > button {
-                width: 100%;
-                margin-top: 0.5rem;
-                margin-bottom: 0.5rem;
-            }
-            
-            /* Gráficos y tablas */
-            .stPlot, .stDataFrame {
-                width: 100%;
-                overflow-x: auto;
-            }
-            
-            /* Media queries para ajustes adicionales en pantallas muy pequeñas */
-            @media screen and (max-width: 320px) {
-                .stMarkdown { font-size: 14px; }
-                h1 { font-size: 22px; }
-                h2 { font-size: 20px; }
-                h3 { font-size: 18px; }
-                h4 { font-size: 16px; }
-            }
+        /* Ajustes generales */
+        .stApp {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+        
+        /* Inputs y selectores */
+        .stTextInput, .stSelectbox, .stSlider, .stDateInput {
+            max-width: 100%;
+        }
+        
+        /* Textos */
+        .stMarkdown {
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        
+        /* Encabezados */
+        h1 { font-size: 2.5rem; }
+        h2 { font-size: 2rem; }
+        h3 { font-size: 1.75rem; }
+        h4 { font-size: 1.5rem; }
+        
+        /* Botones */
+        .stButton > button {
+            width: auto;
+            min-width: 200px;
+            margin: 0.5rem 0;
+            padding: 0.5rem 1rem;
+        }
+        
+        /* Gráficos y tablas */
+        .stPlot, .stDataFrame {
+            width: 100%;
+            overflow-x: auto;
+        }
+        
+        /* Media queries para ajustes en diferentes tamaños de pantalla */
+        @media screen and (max-width: 768px) {
+            .stApp { padding: 0.5rem; }
+            .stMarkdown { font-size: 15px; }
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.75rem; }
+            h3 { font-size: 1.5rem; }
+            h4 { font-size: 1.25rem; }
+            .stButton > button { width: 100%; }
+        }
+        
+        @media screen and (max-width: 480px) {
+            .stMarkdown { font-size: 14px; }
+            h1 { font-size: 1.75rem; }
+            h2 { font-size: 1.5rem; }
+            h3 { font-size: 1.25rem; }
+            h4 { font-size: 1rem; }
+        }
         </style>
         """
         return style
