@@ -68,11 +68,11 @@ class CategoryUtils:
     def markdown_design() -> str:
         style = """
         <style>
-            h1 { font-size: 1.5rem; }
-            h2 { font-size: 1.25rem; }
-            h3 { font-size: 1.15rem; }
-            h4 { font-size: 1.0rem; }
-            p { font-size: 0.85rem; }
+            h1 { font-size: 1.45rem; }
+            h2 { font-size: 1.45rem; }
+            h3 { font-size: 1.45rem; }
+            h4 { font-size: 1.55rem; }
+            p { font-size: 0.95rem; }
         </style>
         """
         return style

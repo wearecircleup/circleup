@@ -69,6 +69,8 @@ if '_is_ethnic' not in st.session_state:
 if "user_auth" not in st.session_state:
     st.session_state.user_auth = None
 
+st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)
+
 @st.cache_resource
 def connector():
     key_firestore = json.loads(st.secrets["textkey"])
