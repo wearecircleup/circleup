@@ -14,7 +14,7 @@ st.set_page_config(
     page_title="Circle Up",
     page_icon="⚫",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)
@@ -134,7 +134,7 @@ def accesse_granted():
     st.info(f"Mantén tu perfil al día para una experiencia óptima en **Circle Up Community**",icon=":material/done_all:")
     st.markdown(profile_warning)
     st.subheader('Circle Up ⚫ Actualizar Perfil')
-    with st.expander(f"**Perfil @{st.session_state.user_auth.first_name.capitalize()}** | Actualización de Información",expanded=True):
+    with st.expander(f"**Perfil @{st.session_state.user_auth.first_name.capitalize()}** | Actualización de Información",collapsed=True):
         form_update_profile()
     
 try:

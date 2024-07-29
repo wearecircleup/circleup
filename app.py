@@ -26,7 +26,7 @@ st.set_page_config(
     page_title="Circle Up",
     page_icon="⚫",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # Initialize Forms Opcions
@@ -169,7 +169,7 @@ with st.container():
 
     feedback_container = st.empty()
 
-    if st.button(label="Ingresar", type="primary", use_container_width=True):
+    if st.button(label="Ingresar", type="secondary", use_container_width=True):
         login_result = login_setup(st.session_state._email_entered, st.session_state._password_entered)
 
         with feedback_container:
@@ -182,5 +182,8 @@ with st.container():
         st.button(f'¡Aprende Sobre Tribus!',type="secondary",on_click=tribu_definition,use_container_width=True)
     with cols[1]:
         st.link_button('¿Qué es Circle Up?',url='https://circleup.com.co/',type="primary",use_container_width=True)
+
+if st.button('Regístrate',type="primary",help='Registro',use_container_width=True):
+    st.switch_page('signup.py')
 
 menu()
