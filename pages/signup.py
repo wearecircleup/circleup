@@ -175,9 +175,10 @@ def sing_up():
         st.checkbox(disclaimer_data_agreemet,key="_data_sharing")
         st.form_submit_button('Regístrate',type="primary",help='Registro | Tribus',on_click=signup_firestore,use_container_width=True)
 
-# try:
 sing_up()
-# except:
-#     st.switch_page("app.py")
 
 menu()
+
+if st.button('Ingresar',type="primary",use_container_width=True):
+    st.switch_page('app.py')
+

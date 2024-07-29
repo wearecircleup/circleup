@@ -29,7 +29,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Initialize Forms Opcions
+
 if 'disabilities' not in st.session_state:
     st.session_state.disabilities = disabilities
     st.session_state.ethnics = ethnics
@@ -68,6 +68,12 @@ if '_is_ethnic' not in st.session_state:
 # Initialize st.session_state.auth to Log In | Circle Up
 if "user_auth" not in st.session_state:
     st.session_state.user_auth = None
+
+if "signup_page" not in st.session_state:
+    st.session_state.signup_page = False
+
+if "login_page" not in st.session_state:
+    st.session_state.login_page = True
 
 st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)
 
@@ -184,6 +190,5 @@ with st.container():
         st.link_button('¿Qué es Circle Up?',url='https://circleup.com.co/',type="primary",use_container_width=True)
 
 if st.button('Regístrate',type="primary",help='Registro',use_container_width=True):
-    st.switch_page('signup.py')
-
+    st.switch_page('pages/signup.py')
 menu()

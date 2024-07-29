@@ -14,7 +14,7 @@ st.set_page_config(
     page_title="Circle Up",
     page_icon="⚫",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="auto"
 )
 
 st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)
