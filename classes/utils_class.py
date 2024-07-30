@@ -68,11 +68,60 @@ class CategoryUtils:
     def markdown_design() -> str:
         style = """
         <style>
-            h1 { font-size: 1.45rem; }
-            h2 { font-size: 1.45rem; }
-            h3 { font-size: 1.45rem; }
+            /* Estilos base */
+            body, div, span, applet, object, iframe, p, blockquote, pre,
+            a, abbr, acronym, address, big, cite, code,
+            del, dfn, em, img, ins, kbd, q, s, samp,
+            small, strike, strong, sub, sup, tt, var,
+            b, u, i, center,
+            dl, dt, dd, ol, ul, li,
+            fieldset, form, label, legend,
+            table, caption, tbody, tfoot, thead, tr, th, td,
+            article, aside, canvas, details, embed, 
+            figure, figcaption, footer, header, hgroup, 
+            menu, nav, output, ruby, section, summary,
+            time, mark, audio, video {
+                font-size: 0.95rem;
+            }
+
+            /* Encabezados */
+            h1, h2, h3 { font-size: 1.45rem; }
             h4 { font-size: 1.55rem; }
-            p { font-size: 0.95rem; }
+            h5, h6 { font-size: 1.35rem; }
+
+            /* Elementos de formulario de Streamlit */
+            .stTextInput input, .stTextArea textarea, .stSelectbox select,
+            .stMultiSelect input, .stNumberInput input {
+                font-size: 0.95rem !important;
+            }
+
+            /* Botones y elementos interactivos */
+            button, .stButton > button, .stDownloadButton > button {
+                font-size: 0.95rem !important;
+            }
+
+            /* Elementos de texto específicos */
+            .stAlert, .stInfo, .stSuccess, .stWarning, .stError {
+                font-size: 0.95rem;
+            }
+
+            /* Elementos de lista y tabla */
+            li, td, th {
+                font-size: 0.95rem;
+            }
+
+            /* Ajustes para elementos de código */
+            code, pre {
+                font-size: 0.9rem;
+            }
+
+            /* Ajustes para elementos de métrica */
+            .stMetricValue {
+                font-size: 1.55rem !important;
+            }
+            .stMetricLabel {
+                font-size: 0.95rem !important;
+            }
         </style>
         """
         return style
