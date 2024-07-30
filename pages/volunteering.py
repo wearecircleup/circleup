@@ -16,10 +16,12 @@ st.set_page_config(
     page_title="Circle Up",
     page_icon="⚫",
     layout="wide",
-    initial_sidebar_state="auto"
+    initial_sidebar_state="collapsed"
 )
 
 st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)
+st.session_state.page_selected = None
+
 st.html(html_banner)
 
 @st.cache_resource
@@ -112,7 +114,6 @@ para que sean expertos en adaptarse y resolver problemas. Si la próxima generac
 norma. Tu aporte hoy puede ser la solución que alguien necesite mañana. ¿Listo para ser parte del cambio?            
 """)
 
-
 st.title("Formulario de Voluntarios")
 
 st.markdown("""
@@ -189,3 +190,7 @@ if submit_button:
             st.error("Lo sentimos, solo los usuarios activos con rol de Learner pueden enviar este formulario.")
         else:
             st.error("Por favor, completa todos los campos del formulario antes de enviar.")
+
+st.divider()
+if st.button(':material/hiking: Volver al Inicio', type="secondary", help='Volver al menú principal', use_container_width=True):
+    st.switch_page('app.py')

@@ -14,10 +14,12 @@ st.set_page_config(
     page_title="Circle Up",
     page_icon="⚫",
     layout="wide",
-    initial_sidebar_state="auto"
+    initial_sidebar_state="collapsed"
 )
 
 st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)
+
+st.session_state.page_selected = None
 
 if 'show_explore' not in st.session_state:
     st.session_state.show_explore = False
@@ -393,5 +395,8 @@ if st.session_state.show_explore:
 if st.session_state.show_manage:
     entry_unregister()
 
+st.divider()
+if st.button(':material/hiking: Volver al Inicio', type="secondary", help='Volver al menú principal', use_container_width=True):
+    st.switch_page('app.py')
 
 menu()

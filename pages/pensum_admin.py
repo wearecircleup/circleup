@@ -12,7 +12,7 @@ st.set_page_config(
     page_title="Circle Up",
     page_icon="⚫",
     layout="wide",
-    initial_sidebar_state="auto"
+    initial_sidebar_state="collapsed"
 )
 
 if 'send_fb' not in st.session_state:
@@ -26,6 +26,8 @@ if 'content' not in st.session_state:
 
 if 'show_html' not in st.session_state:
     st.session_state.show_html = False
+
+st.session_state.page_selected = None
 
 st.html(html_banner)
 st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)

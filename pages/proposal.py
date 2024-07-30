@@ -20,10 +20,11 @@ st.set_page_config(
     page_title="Circle Up",
     page_icon="⚫",
     layout="wide",
-    initial_sidebar_state="auto"
+    initial_sidebar_state="collapsed"
 )
 
 st.markdown(CategoryUtils().markdown_design(), unsafe_allow_html=True)
+st.session_state.page_selected = None
 
 if 'enable_form' not in st.session_state:
     st.session_state.enable_form = True
@@ -384,7 +385,12 @@ else:
     
     st.success("Gracias por ser parte de este proceso de co-creación. Tu contribución es fundamental para nuestro éxito colectivo.", icon=":material/draw:")
 
+    st.divider()
+    if st.button(':material/hiking: Volver al Inicio', type="secondary", help='Volver al menú principal', use_container_width=True):
+        st.switch_page('app.py')
 menu()
 
-
+st.divider()
+if st.button(':material/hiking: Volver al Inicio', type="secondary", help='Volver al menú principal', use_container_width=True):
+    st.switch_page('app.py')
 

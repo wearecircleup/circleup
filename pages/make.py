@@ -23,10 +23,11 @@ st.set_page_config(
     page_title="Circle Up",
     page_icon="⚫",
     layout="wide",
-    initial_sidebar_state="auto"
+    initial_sidebar_state="collapsed"
 )
 
 st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)
+st.session_state.page_selected = None
 
 if 'status_request' not in st.session_state:
     st.session_state.status_request = False
@@ -293,3 +294,6 @@ if not st.session_state.form_submitted:
     st.info("Por favor, completa el formulario y haz clic en **Enviar perfil** para ver los resultados.", icon=":material/info:")
 
 
+st.divider()
+if st.button(':material/hiking: Volver al Inicio', type="secondary", help='Volver al menú principal', use_container_width=True):
+    st.switch_page('app.py')

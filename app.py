@@ -20,7 +20,7 @@ from utils.form_options import (disabilities,ethnics,skills,
                                 topics_of_interest,education_level)
 
 from utils.form_instructions import form_definitions
-from utils.body import tribu_definition,html_banner
+from utils.body import html_banner
 
 st.set_page_config(
     page_title="Circle Up",
@@ -69,11 +69,11 @@ if '_is_ethnic' not in st.session_state:
 if "user_auth" not in st.session_state:
     st.session_state.user_auth = None
 
-if "signup_page" not in st.session_state:
-    st.session_state.signup_page = False
+if 'page_selected' not in st.session_state:
+    st.session_state.page_selected = None
 
-if "login_page" not in st.session_state:
-    st.session_state.login_page = True
+if 'page_msm' not in st.session_state:
+    st.session_state.page_msm = 'status'
 
 st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)
 
@@ -84,27 +84,24 @@ def connector():
     Conn = Firestore(db)
     return Conn
 
-def show_login_feedback(status: str, email: str = None):
-    if status == "success":
-        st.toast("Inicio de sesión exitoso", icon="✅")
-        st.success("Bienvenido de nuevo a Circle Up")
-        st.info("Has iniciado sesión correctamente. Ahora puedes acceder a todas las funcionalidades de la plataforma.")
-    elif status == "wrong_password":
-        st.toast("Contraseña incorrecta", icon="⚠️")
-        st.error("La contraseña ingresada no es correcta")
-        st.warning(
-            "- Las contraseñas distinguen entre mayúsculas y minúsculas\n"
-            "- Verifica que no tengas el bloq mayús activado"
-        )
-    else:
-        st.toast("Error de inicio de sesión", icon="⚠️")
-        st.error("No se pudo completar el inicio de sesión")
-        st.warning(
-            "Por favor, **verifica**\n"
-            "- El correo electrónico está escrito correctamente\n"
-            "- La contraseña es la correcta\n"
-            "- No hay espacios adicionales en los campos"
-        )
+def show_navigation():
+    pages = {
+        "Perfil": "pages/profile.py",
+        "Explora Cursos": "pages/enroll.py"
+    }
+    
+    if st.session_state.user_auth.user_role == 'Learner':
+        pages["Ser Voluntario"] = "pages/volunteering.py"
+    
+    if st.session_state.user_auth.user_role in ['Volunteer', 'Admin']:
+        pages["Crear Ideas"] = "pages/make.py"
+        pages["Proponer Curso"] = "pages/proposal.py"
+    
+    if st.session_state.user_auth.user_role == 'Admin':
+        pages["Gestión Voluntarios"] = "pages/orchestrate.py"
+        pages["Revisar Cursos"] = "pages/rollout.py"
+
+    return pages
 
 def prepare_sheets_data(instance_data):
     """
@@ -138,57 +135,68 @@ def send_to_sheets(data: List[List[str]]):
 def login_setup(email, password):
     if not email or not password:
         return "incomplete_fields"
-
     try:
         query_data = connector().auth_firestore(email, password)
         instance = Users(**query_data)
+        
         instance_data = asdict(instance)
         sheets_data = prepare_sheets_data(instance_data)
-        send_to_sheets([sheets_data]) 
+        send_to_sheets([sheets_data])
     except:
         instance = None
     if instance:
         st.session_state.user_auth = instance
+        st.session_state.login_status = 'logged_in'
         return "success"
     else:
+        st.session_state.user_auth = None
         return "wrong_password"
-
 
 st.html(html_banner)
 
 intro_message = """
-Circle Up ⚫ es una plataforma dedicada a la gestión de propuestas e ideas de aquellos que desean compartir su conocimiento con la comunidad. 
-Ofrecemos un espacio seguro, fácil de usar, gratuito y sin ánimo de lucro.
-"""
-container_message = """
-Elige :blue[**Crew**] para descubrir y aprender, o :blue[**Nomad/Sentinel**] para crear y guiar. ¿Listo para sumergirte? Haz clic en :blue[**Aprende sobre tribus**] y comienza en Circle Up ⚫.
+Circle Up Community ⚫ es una plataforma dedicada a la :blue-background[gestión de propuestas e ideas] para la comunidad. 
 """
 
-st.subheader(f"**Log In | Circle Up** ⚫")
-
-st.markdown(intro_message)
+st.title(f":material/ads_click: **Log In | Circle Up Community**")
 
 with st.container():
-    st.markdown("Por favor, ingresa con tus datos registrados para continuar. Si aún no tienes una cuenta, dirígete al botón de :blue[**Registro/Sign Up**]") 
-    st.text_input(label="Correo electrónico",placeholder="mail@mail.com",key="_email_entered")      
-    st.text_input(label="Contraseña",placeholder="eMp3r@D0r",key="_password_entered",type="password") 
 
-    feedback_container = st.empty()
+    st.markdown("Ingresa con tus datos para continuar. Si aún no tienes una cuenta, dirígete a :blue-background[**Únete/Regístrate**]") 
+    
+    with st.form(key='login_form', clear_on_submit=False):
 
-    if st.button(label="Ingresar", type="secondary", use_container_width=True):
-        login_result = login_setup(st.session_state._email_entered, st.session_state._password_entered)
+        email = st.text_input(label="Correo electrónico", placeholder="mail@mail.com", key="_email_entered")      
+        password = st.text_input(label="Contraseña", placeholder="eMp3r@D0r", key="_password_entered", type="password")
+        
+        submit_button = st.form_submit_button(label=":material/ads_click: Ingresar", type="secondary", use_container_width=True)
 
-        with feedback_container:
-            show_login_feedback(login_result, st.session_state._email_entered)
+    if submit_button:
+        st.session_state.user_auth = None
+        status = login_setup(email, password)
+        st.session_state.page_msm = 'success' if status == 'success' else 'fail'
+        st.rerun()
 
-with st.container():
-    st.markdown(container_message)
-    cols = st.columns([1, 1])
-    with cols[0]:
-        st.button(f'¡Aprende Sobre Tribus!',type="secondary",on_click=tribu_definition,use_container_width=True)
-    with cols[1]:
-        st.link_button('¿Qué es Circle Up?',url='https://circleup.com.co/',type="primary",use_container_width=True)
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button(':material/touch_app: Únete/Regístrate', type="primary", help='Registro', use_container_width=True):
+            st.switch_page('pages/signup.py')
+    with col2:
+        st.link_button(':material/person_raised_hand: ¿Qué es Circle Up?', url='https://circleup.com.co/', type="secondary", use_container_width=True)
+    
+    if st.session_state.page_msm == 'success':
+        st.success("Tu cuenta ha sido :green-background[autenticada]. Explora las funcionalidades disponibles para ti. Usa el :green-background[Quick Menu]", icon=":material/passkey:")
+    elif st.session_state.page_msm == 'fail':
+        st.error(":red-background[No pudimos iniciar sesión]. Por favor, revisa tu :red-background[correo electrónico o contraseña.]", icon=":material/password:")
+    else:
+        pass
 
-if st.button('Regístrate',type="primary",help='Registro',use_container_width=True):
-    st.switch_page('pages/signup.py')
+    if st.session_state.user_auth is not None:
+        pages = show_navigation()
+        selected_page = st.selectbox("Quick Menu", options=list(pages.keys()),key='page_selected')
+        if selected_page:
+            st.switch_page(pages[selected_page])
+    
+    st.info(":blue[**¿Necesitas ayuda?**] Escribe a :blue-background[wearecircleup@gmail.com]", icon=":material/sos:")
+
 menu()

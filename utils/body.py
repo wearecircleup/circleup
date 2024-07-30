@@ -8,9 +8,7 @@ Lorem ipsum nunc at libero elit curabitur at lacus lectus placerat, condimentum 
 """
 
 
-disclaimer_data_agreemet = """
-Al proporcionar mis datos personales, **acepto** que sean utilizados y gestionados internamente, en conformidad con las leyes de protección de datos de Colombia. Esto incluye la Ley de Protección de Datos Personales (Ley 1581 de 2012) y sus decretos reglamentarios. **Entiendo que mis datos serán tratados con el debido respeto y protección, y que no serán compartidos con terceros sin mi consentimiento explícito**.
-"""
+
 
 disclaimer_delete = """
 Estás a punto de eliminar tu propuesta de curso de forma permanente. Esta acción es irreversible y no podrás recuperar la información eliminada. 
@@ -151,13 +149,13 @@ def warning_login_failed(email:str = None,password:str = None):
         st.markdown('- Revisa que tu **correo electrónico y contraseña** estén  correctos. Es posible que haya errores de mayúsculas, minúsculas o de escritura.')
         st.warning("Por favor, asegúrate de revisar tu **correo electrónico y contraseña**!", icon="⚠️")
 
+disclaimer_data_agreemet = """Al proporcionar mis datos, :blue-background[acepto] que sean utilizados y gestionados internamente, en conformidad con las leyes de protección de datos de Colombia. Esto incluye la Ley de :blue-background[Protección de Datos Personales (Ley 1581 de 2012)] y sus decretos reglamentarios. Entiendo que mis datos serán tratados con el debido respeto y protección, y que no serán compartidos con terceros sin consentimiento explícito"""
 
 @st.dialog("Tratamiento de Datos")
 def warning_data_sharing():
     st.markdown(disclaimer_data_agreemet)
     st.divider()
     st.warning("Por favor, asegúrate de aceptar el tratamiento de datos para completar tu registro.",icon="⚠️")
-
 
 @st.dialog("¡Ups! Datos Faltantes")
 def warning_empty_data(fields:str=''):
@@ -171,17 +169,6 @@ def warning_reupload():
     st.divider()
     st.warning("Por favor, verifica que no estás sobrescribiendo un curso. Recuerda que tienes la opción de eliminar o actualizar en caso de que desees renombrar cursos.", icon="⚠️")
 
-
-@st.dialog("¡Ya tienes una cuenta Registrada!")
-def warning_signup_failed(hidden_data):
-    st.markdown('¡Hola! Parece que ya tienes una cuenta registrada en nuestro sistema.')
-    st.markdown('Aquí están algunos de los datos asociados con tu cuenta')
-    
-    del hidden_data['status']
-    user_data = pd.DataFrame([hidden_data])
-    st.dataframe(user_data,hide_index=True,use_container_width=True)
-    st.warning("Por favor, verifica si reconoces estos datos. Si necesitas ayuda, no dudes en contactar a sporte.",icon="⚠️")
-    
 # Info Dialogs
 
 @st.dialog("Verificación Pensum")

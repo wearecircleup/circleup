@@ -11,7 +11,7 @@ st.set_page_config(
     page_title="Circle Up",
     page_icon="⚫",
     layout="wide",
-    initial_sidebar_state="auto"
+    initial_sidebar_state="collapsed"
 )
 
 if 'send_email' not in st.session_state:
@@ -21,6 +21,8 @@ if 'verified' not in st.session_state:
     st.session_state.verified = True
 
 st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)
+st.session_state.page_selected = None
+
 st.html(html_banner)
 
 def anthropic_email(pensum,mail_server):

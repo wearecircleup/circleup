@@ -9,15 +9,18 @@ from google.cloud import firestore
 from classes.firestore_class import Firestore
 from classes.utils_class import CategoryUtils
 from dataclasses import asdict
+import re
 
 st.set_page_config(
     page_title="Circle Up",
     page_icon="⚫",
     layout="wide",
-    initial_sidebar_state="auto"
+    initial_sidebar_state="collapsed"
 )
 
 st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)
+
+st.session_state.page_selected = None
 
 if 'updates_confirmation' not in st.session_state:
     st.session_state.updates_confirmation = False
@@ -30,37 +33,59 @@ def connector():
     Conn = Firestore(db)
     return Conn
 
-def update_users_profile():
-    if st.session_state.user_auth.user_role == 'Volunteer':
-        layout = st.columns([2,2])
-        layout[0].text_input(label="Nombre",value=st.session_state.user_auth.first_name,key="_first_name",help=st.session_state.form_definitions['_first_name'])
-        layout[1].text_input(label="Apellido",value=st.session_state.user_auth.last_name,key="_last_name",help=st.session_state.form_definitions['_last_name']) 
-        layout[0].text_input(label="Correo Electronico",value=st.session_state.user_auth.email,key="_email",help=st.session_state.form_definitions['_email'])
-        layout[1].text_input(label="Contraseña",value=st.session_state.user_auth.password,type="password",key="_password",help=st.session_state.form_definitions['_password'])
-        layout[0].text_input(label="Direccion",value=st.session_state.user_auth.address,key="_address",help=st.session_state.form_definitions['_address'])
-        layout[1].text_input(label="Telefono Celular",value=st.session_state.user_auth.phone_number,key="_phone_number",help=st.session_state.form_definitions['_phone_number'])
-        layout[0].selectbox(label="Tipo D.I.", index=st.session_state.id_user_list.index(st.session_state.user_auth.id_user_type),options=st.session_state.id_user_list, key="_id_user_type",help=st.session_state.form_definitions['_id_user_type'],disabled=True) 
-        layout[1].text_input(label="Número Documento Identidad",value=st.session_state.user_auth.id_user,key="_id_user",help=st.session_state.form_definitions['_id_user'],disabled=True) 
-        layout[0].text_input(label="Cuidad Residencia",value=st.session_state.user_auth.city_residence,key="_city_residence",help=st.session_state.form_definitions['_city_residence'])
-        layout[1].text_input(label="Nombre Tutor legal/Emergencia",value=st.session_state.user_auth.guardian_fullname,key="_guardian_fullname",help=st.session_state.form_definitions['_guardian_fullname'])
-        layout[0].text_input(label="Parentesco",value=st.session_state.user_auth.guardian_relationship,key="_guardian_relationship",help=st.session_state.form_definitions['_guardian_relationship'])
-        layout[1].text_input(label="Telefono Tutor/Emergencia",value=st.session_state.user_auth.emergency_phone,key="_emergency_phone",help=st.session_state.form_definitions['_emergency_phone'])
+
+def validate_password(password):
+    errors = []
+    if len(password) < 8:
+        errors.append("La contraseña debe tener al menos :orange-background[8 caracteres.]")
+    if not re.search(r"[A-Z]", password):
+        errors.append("La contraseña debe contener al menos :orange-background[una letra mayúscula.]")
+    if not re.search(r"[a-z]", password):
+        errors.append("La contraseña debe contener al menos :orange-background[una letra minúscula.]")
+    if not re.search(r"\d", password):
+        errors.append("La contraseña debe contener al menos :orange-background[un número.]")
+    if not re.search(r"[!\_\-@#$%^&*(),.?\":{}|<>]", password):
+        errors.append("La contraseña debe contener al menos :orange-background[un carácter especial.]")
+    
+    is_valid = len(errors) == 0
+    
+    if not is_valid:
+        funny_example = "N@pol3on!"
+        message = "\n".join(f":material/password_2_off: {error}" for error in errors)
+        message += f"\n\n¿Qué tal si pruebas con algo como :orange[**Ejemplo**] :orange-background[{funny_example}]? :material/vpn_lock:"
     else:
-        layout = st.columns([2,2])
-        layout[0].text_input(label="Nombre",value=st.session_state.user_auth.first_name,key="_first_name",help=st.session_state.form_definitions['_first_name'])
-        layout[1].text_input(label="Apellido",value=st.session_state.user_auth.last_name,key="_last_name",help=st.session_state.form_definitions['_last_name']) 
-        layout[0].text_input(label="Correo Electronico",value=st.session_state.user_auth.email,key="_email",help=st.session_state.form_definitions['_email'])
-        layout[1].text_input(label="Contraseña",value=st.session_state.user_auth.password,type="password",key="_password",help=st.session_state.form_definitions['_password'])
-        layout[0].text_input(label="Direccion",value=st.session_state.user_auth.address,key="_address",help=st.session_state.form_definitions['_address'])
-        layout[1].text_input(label="Telefono Celular",value=st.session_state.user_auth.phone_number,key="_phone_number",help=st.session_state.form_definitions['_phone_number'])
-        layout[0].selectbox(label="Tipo D.I.", index=st.session_state.id_user_list.index(st.session_state.user_auth.id_user_type),options=st.session_state.id_user_list, key="_id_user_type",help=st.session_state.form_definitions['_id_user_type'],disabled=True) 
-        layout[1].text_input(label="Número Documento Identidad",value=st.session_state.user_auth.id_user,key="_id_user",help=st.session_state.form_definitions['_id_user'],disabled=True) 
-        layout[0].text_input(label="Cuidad Residencia",value=st.session_state.user_auth.city_residence,key="_city_residence",help=st.session_state.form_definitions['_city_residence'])
-        layout[1].text_input(label="Nombre Tutor legal/Emergencia",value=st.session_state.user_auth.guardian_fullname,key="_guardian_fullname",help=st.session_state.form_definitions['_guardian_fullname'])
-        layout[0].text_input(label="Parentesco",value=st.session_state.user_auth.guardian_relationship,key="_guardian_relationship",help=st.session_state.form_definitions['_guardian_relationship'])
-        layout[1].text_input(label="Telefono Tutor/Emergencia",value=st.session_state.user_auth.emergency_phone,key="_emergency_phone",help=st.session_state.form_definitions['_emergency_phone'])
-        layout[0].multiselect(label="Selecciona tus habilidades",default=st.session_state.user_auth.skills,key="_skills",help=st.session_state.form_definitions['_skills'],options=skills)
-        layout[1].multiselect(label="¿Cómo aprendes mejor?",default=st.session_state.user_auth.how_to_learn,key="_how_to_learn",help=st.session_state.form_definitions['_how_to_learn'],options=how_to_learn)
+        message = "La contraseña cumple con todos los requisitos."
+    
+    return is_valid, message
+
+def update_users_profile():
+    layout = st.columns([2,2])
+    layout[0].text_input(label="Nombre",value=st.session_state.user_auth.first_name,key="_first_name",help=st.session_state.form_definitions['_first_name'])
+    layout[1].text_input(label="Apellido",value=st.session_state.user_auth.last_name,key="_last_name",help=st.session_state.form_definitions['_last_name']) 
+    layout[0].text_input(label="Correo Electronico",value=st.session_state.user_auth.email,key="_email",help=st.session_state.form_definitions['_email'])
+    
+    new_password = layout[1].text_input(label="Contraseña", value="", type="password", key="_new_password", help="Ingrese su contraseña si desea cambiarla. Déjela en blanco para mantener la actual.")
+    if new_password:
+        is_valid, message = validate_password(new_password)
+        if not is_valid:
+            layout[1].error(message)
+        else:
+            layout[1].success(":material/check: " + message)
+            st.session_state._password = new_password
+    else:
+        st.session_state._password = st.session_state.user_auth.password
+
+    layout[0].text_input(label="Direccion",value=st.session_state.user_auth.address,key="_address",help=st.session_state.form_definitions['_address'])
+    layout[1].text_input(label="Telefono Celular",value=st.session_state.user_auth.phone_number,key="_phone_number",help=st.session_state.form_definitions['_phone_number'])
+    layout[0].selectbox(label="Tipo D.I.", index=st.session_state.id_user_list.index(st.session_state.user_auth.id_user_type),options=st.session_state.id_user_list, key="_id_user_type",help=st.session_state.form_definitions['_id_user_type'],disabled=True) 
+    layout[1].text_input(label="Número Documento Identidad",value=st.session_state.user_auth.id_user,key="_id_user",help=st.session_state.form_definitions['_id_user'],disabled=True) 
+    layout[0].text_input(label="Cuidad Residencia",value=st.session_state.user_auth.city_residence,key="_city_residence",help=st.session_state.form_definitions['_city_residence'])
+    layout[1].text_input(label="Nombre Tutor legal/Emergencia",value=st.session_state.user_auth.guardian_fullname,key="_guardian_fullname",help=st.session_state.form_definitions['_guardian_fullname'])
+    layout[0].text_input(label="Parentesco",value=st.session_state.user_auth.guardian_relationship,key="_guardian_relationship",help=st.session_state.form_definitions['_guardian_relationship'])
+    layout[1].text_input(label="Telefono Tutor/Emergencia",value=st.session_state.user_auth.emergency_phone,key="_emergency_phone",help=st.session_state.form_definitions['_emergency_phone'])
+    layout[0].multiselect(label="Selecciona tus habilidades",default=st.session_state.user_auth.skills,key="_skills",help=st.session_state.form_definitions['_skills'],options=skills)
+    layout[1].multiselect(label="¿Cómo aprendes mejor?",default=st.session_state.user_auth.how_to_learn,key="_how_to_learn",help=st.session_state.form_definitions['_how_to_learn'],options=how_to_learn)
+
 
 def profile_updates():
     profile_attributes = {
@@ -78,7 +103,6 @@ def profile_updates():
         'emergency_phone':st.session_state._emergency_phone,
         'skills':st.session_state._skills,
         'how_to_learn':st.session_state._how_to_learn
-
     }
 
     if all(profile_attributes.values()):
@@ -86,8 +110,8 @@ def profile_updates():
         warning_profile_changes(changes)
         if any([value[-1] for value in changes.values()]):
             st.session_state.updates_request = False
-        
-    else: warning_empty_data()    
+    else: 
+        warning_empty_data()    
 
 def update_profile_changes():
     profile_attributes = {
@@ -118,7 +142,6 @@ def update_profile_changes():
 menu()
 
 def form_update_profile():
-    st.write('**Circle Up ⚫ Participación Activa**')
     update_users_profile()
     button_layout = st.columns([3,1,2])
     button_layout[0].button(label='Verificar Cambios',type="primary",on_click=profile_updates,disabled=st.session_state.updates_confirmation,use_container_width=True)
@@ -133,16 +156,21 @@ def accesse_granted():
     """
     st.info(f"Mantén tu perfil al día para una experiencia óptima en **Circle Up Community**",icon=":material/done_all:")
     st.markdown(profile_warning)
-    st.subheader('Circle Up ⚫ Actualizar Perfil')
-    with st.expander(f"**Perfil @{st.session_state.user_auth.first_name.capitalize()}** | Actualización de Información",auto=True):
-        form_update_profile()
+    st.title(f"Actualización de Información")
+    form_update_profile()
+
     
-try:
-    if st.session_state.user_auth is not None and st.session_state.user_auth.user_status == 'Activo':
-        st.html(html_banner)
-        st.subheader(f'¡Hola, @{st.session_state.user_auth.first_name.capitalize()}!')
-        accesse_granted()
-    else: 
-        unauthenticate_login(st.session_state.user_auth.user_role)
-except:
-    st.switch_page("app.py")
+# try:
+if st.session_state.user_auth is not None and st.session_state.user_auth.user_status == 'Activo':
+    st.html(html_banner)
+    st.subheader(f'¡Hola, @{st.session_state.user_auth.first_name.capitalize()}!')
+    accesse_granted()
+
+    st.divider()
+    if st.button(':material/hiking: Volver al Inicio', type="secondary", help='Volver al menú principal', use_container_width=True):
+        st.switch_page('app.py')
+    
+else: 
+    unauthenticate_login(st.session_state.user_auth.user_role)
+# except:
+#     st.switch_page("app.py")

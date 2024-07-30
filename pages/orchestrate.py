@@ -15,10 +15,11 @@ st.set_page_config(
     page_title="Circle Up",
     page_icon="⚫",
     layout="wide",
-    initial_sidebar_state="auto"
+    initial_sidebar_state="collapsed"
 )
 
 st.markdown(CategoryUtils.markdown_design(), unsafe_allow_html=True)
+st.session_state.page_selected = None
 
 st.html(html_banner)
 
@@ -174,3 +175,7 @@ def send_notification_email(connector: Firestore, volunteer_data: dict):
 
 connector = connector()
 manage_volunteer_requests(connector)
+
+st.divider()
+if st.button(':material/hiking: Volver al Inicio', type="secondary", help='Volver al menú principal', use_container_width=True):
+    st.switch_page('app.py')

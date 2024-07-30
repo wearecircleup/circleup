@@ -24,7 +24,6 @@ topics_of_interest = [
     'Idiomas y Culturas Extranjeras'
 ]
 
-
 agreement_options = [
     'Acepto',
     'Rechazo'
@@ -60,6 +59,22 @@ cities = [
     'Virtual'
 ]
 
+
+municipios = [
+    "Tocancipá",
+    "Gachancipá",
+    "Cajicá",
+    "Chía",
+    "Zipaquirá",
+    "Bogotá",
+    "Cota",
+    "Nemocón",
+    "Sopó",
+    "Tabio",
+    "Tenjo",
+    "Otro municipio"
+]
+
 consent_items = [
         "Autorizo la difusión del curso a través de redes sociales, WhatsApp y notificaciones de correo electrónico asociadas a Circle Up.",
         "En caso de una emergencia personal o de salud que impida mi participación, me comprometo a notificar la cancelación con un mínimo de 24 horas de antelación. La notificación será enviada simultáneamente a wearecircleup@gmail.com, gocircleup@gmail.com y al número de WhatsApp 3046714626.",
@@ -78,31 +93,34 @@ consent_items = [
 
 
 careers = [
-    "Tecnología, Informática y Telecomunicaciones",
-    "Ciencias de la Salud y Medicina",
-    "Educación, Formación y Desarrollo Humano",
-    "Negocios, Administración y Emprendimiento",
-    "Artes, Diseño y Arquitectura",
-    "Ingeniería, Construcción y Manufactura",
-    "Derecho, Ciencias Jurídicas y Políticas",
-    "Ciencias Sociales, Humanidades y Psicología",
-    "Ciencias Naturales y Medio Ambiente",
-    "Comunicación, Periodismo y Medios",
-    "Finanzas, Economía y Contabilidad",
-    "Agricultura, Veterinaria y Ciencias Alimentarias",
-    "Logística, Transporte y Cadena de Suministro",
-    "Turismo, Hospitalidad y Gestión de Eventos",
-    "Deportes, Educación Física y Ciencias del Deporte",
-    "Seguridad, Defensa y Servicios de Emergencia",
-    "Investigación Científica y Desarrollo Tecnológico",
-    "Energía, Recursos Naturales y Minería",
+    "Tecnología e Informática",
+    "Salud y Medicina",
+    "Educación y Desarrollo Humano",
+    "Negocios y Administración",
+    "Artes y Diseño",
+    "Ingeniería y Manufactura",
+    "Derecho y Ciencias Políticas",
+    "Ciencias Sociales y Humanidades",
+    "Ciencias Naturales y Ambientales",
+    "Comunicación y Medios",
+    "Finanzas y Economía",
+    "Agricultura y Ciencias Alimentarias",
+    "Logística y Transporte",
+    "Turismo y Gestión de Eventos",
+    "Deportes y Educación Física",
+    "Seguridad y Servicios de Emergencia",
+    "Investigación y Desarrollo",
+    "Energía y Recursos Naturales",
     "Industria Creativa y Entretenimiento",
     "Servicios Sociales y Comunitarios",
+    "Arquitectura y Construcción",
+    "Psicología y Desarrollo Personal",
+    "Trabajo Social y Voluntariado",
+    "Estudios Religiosos y Teología",
     "Otro"
 ]
 
 # El resto del código del formulario permanece igual, solo reemplaza la variable 'professional_categories' por 'career_categories'
-
 volunteer_level = [
         "Técnico",
         "Tecnólogo",
@@ -113,15 +131,16 @@ volunteer_level = [
     ]
 
 education_level = [
-    'Preescolar',
-    'Educación Básica Primaria',
-    'Educación Básica Secundaria',
-    'Educación Técnica',
-    'Educación Tecnológica',
-    'Educación Profesional Universitaria',
-    'Educación Profesional Especializada (Posgrado)',
-    'Educación Profesional Maestría (Posgrado)',
-    'Educación Profesional Doctorado (Posgrado)',
+    'Sin estudios formales',
+    'Primaria',
+    'Secundaria',
+    'Bachillerato',
+    'Técnico',
+    'Tecnólogo',
+    'Universidad (Pregrado)',
+    'Especialización',
+    'Maestría',
+    'Doctorado',
     'Otro'
 ]
 
@@ -130,25 +149,32 @@ education_level = [
 id_user_list = ["T.I.","C.C.","C.E.","P.C."]
 
 gender_list = [
-    "Masculino",
-    "Femenino",
-    # "No binario",
-    # "Transexual",
-    # "Transgénero",
-    "Prefiero no decir"
+    "Hombre",
+    "Mujer",
+    "Otro",
+    "Prefiero no especificar"
 ]
 
 #Discapacidades
-disabilities = [
-        "Discapacidad visual","Discapacidad auditiva","Discapacidad física","Discapacidad intelectual","Autista (TEA)/(ASD)","Déficit de Atención/Hiperactividad (TDAH)",
-        "Enfermedades crónicas","Trastorno Depresión","Trastorno Ansiedad","Trastorno Bipolar","Síndrome de Down","Enfermedad de Alzheimer","Amputaciones",
-        "otras","No Aplica"
-        ]
 
+disabilities = [
+    "Visual",
+    "Auditiva",
+    "Física",
+    "Cognitiva",
+    "Neurológica",
+    "Psicosocial",
+    "Enfermedad crónica",
+    "Otra",
+    "No Aplica"
+]
 #Etnias
 ethnics = [
-            "Pueblos Indígenas","Comunidades Afrocolombianas","Desplazamiento Forzado","No Aplica"
-            ]
+    "Indígena",
+    "Afrocolombiano",
+    "Otro grupo étnico",
+    "No Aplica"
+]
 
 #Roles
 roles_jerarquicos = [
@@ -171,113 +197,63 @@ roles_jerarquicos = [
 
 # Habilidades
 skills = [
-    "Liderazgo",
-    "Trabajo en equipo",
-    "Resolución de problemas",
-    "Comunicación",
-    "Creatividad",
-    "Empatía",
-    "Organización",
-    "Pensamiento crítico",
-    "Adaptabilidad",
-    "Gestión del tiempo",
     "Tecnología",
-    "Arte",
-    "Deportes",
     "Idiomas",
+    "Deportes",
+    "Arte",
     "Música",
+    "Lectura",
+    "Escritura",
     "Ciencias",
     "Matemáticas",
-    "Literatura",
-    "Historia",
-    "Geografía",
-    "Dibujo",
-    "Baile",
-    "Actuación",
-    "Programación",
-    "Robótica",
-    "Manualidades",
     "Cocina",
-    "Jardinería",
-    "Economía",
-    "Medio ambiente",
-    "Salud y bienestar",
-    "Diseño",
     "Fotografía",
-    "Videojuegos",
+    "Creación de contenido",
     "Otros"
 ]
 
 # Formas de aprender
 how_to_learn = [
-    "Visual",
-    "Auditivo",
-    "Kinestésico",
-    "Lecto-escritor",
-    "Interactivo",
-    "Experiencial",
-    "Reflexivo",
-    "Social",
-    "Individual",
-    "Estructurado",
-    "Exploratorio",
-    "Basado en problemas",
-    "Basado en proyectos",
-    "Multimedia",
-    "Tecnológico",
-    "Inmersivo",
+    "Viendo (videos, imágenes)",
+    "Escuchando (audio, podcasts)",
+    "Leyendo",
+    "Practicando",
+    "Enseñando a otros",
+    "Discutiendo en grupo",
+    "Investigando por mi cuenta",
     "Otro"
 ]
 
 # Debilidades
 weaknesses = [
-    "Timidez",
-    "Falta de confianza",
-    "Procrastinación",
-    "Miedo al fracaso",
-    "Perfeccionismo",
-    "Dificultad para pedir ayuda",
-    "Impaciencia",
-    "Desorganización",
-    "Distracciones",
-    "Baja autoestima",
-    "Desinterés",
-    "Falta de habilidades sociales",
-    "Dificultad para expresar emociones",
-    "Falta de habilidades de estudio",
-    "Falta de autocontrol",
-    "Desorden",
-    "Inseguridad",
-    "Dificultad para aceptar críticas",
-    "Problemas de atención",
-    "Falta de planificación",
-    "Falta de habilidades para resolver conflictos",
-    "Dificultad para seguir instrucciones",
-    "Otros"
+    "Hablar en público",
+    "Manejo del tiempo",
+    "Organización",
+    "Trabajo bajo presión",
+    "Toma de decisiones",
+    "Atención a los detalles",
+    "Delegación de tareas",
+    "Adaptación al cambio",
+    "Negociación",
+    "Manejo de conflictos",
+    "Establecer prioridades",
+    "Otro"
 ]
 
 # Fortalezas
 strengths = [
-    "Creatividad",
-    "Persistencia",
-    "Empatía",
-    "Trabajo en equipo",
-    "Resolución de problemas",
-    "Liderazgo",
-    "Comunicación efectiva",
+    "Hablar en público",
+    "Manejo del tiempo",
     "Organización",
-    "Pensamiento crítico",
-    "Adaptabilidad",
-    "Curiosidad",
-    "Entusiasmo",
-    "Responsabilidad",
-    "Autodisciplina",
-    "Autoconfianza",
-    "Optimismo",
-    "Habilidad para aprender rápido",
-    "Tolerancia",
-    "Buena memoria",
-    "Otros"
+    "Trabajo bajo presión",
+    "Toma de decisiones",
+    "Atención a los detalles",
+    "Delegación de tareas",
+    "Adaptación al cambio",
+    "Negociación",
+    "Manejo de conflictos",
+    "Establecer prioridades",
+    "Otro"
 ]
 
 volunteer_keywords = [
@@ -313,5 +289,4 @@ volunteer_keywords = [
     "Apoyo emocional",
     "Otros"
 ]
-
 
