@@ -198,13 +198,14 @@ def enrollment_notice(data: Dict, selected_course):
     data['cloud_id'] = cloud_id 
     sheet_entry = [list(data.values())]
 
-    with st.spinner("Guardando tu inscripción. Este proceso tardará ~20 segs...\n\n"
+    with st.spinner("Guardando tu inscripción...\n\n"
                     "1. Vas a recibir un email en ~5min.\n"
                     "2. Si no recibes el email, escribe a wearecircleup@gmail.com\n"
                     "3. Si quieres donar o ayudar, escribe a +57 3046714626"):
         
-        time.sleep(12)
+        time.sleep(3)
         send_to_sheets(sheet_entry,'1c_Pjefz-dtpBI2Yq6iPvPnSC5IkkWh7eCmdWaG39tzw','Enrollment')
+        time.sleep(3)
 
     st.session_state.lock_courses = lock_data('course_name')    
     st.rerun()
@@ -215,13 +216,14 @@ def unenrollment_notice(cloud_id: str, selected_course):
     st.session_state.show_manage = False
     update_firebase(cloud_id)
 
-    with st.spinner("Actualizando tu inscripción. Este proceso tardará ~20 segs...\n\n"
+    with st.spinner("Actualizando tu inscripción...\n\n"
                     "1. Vas a recibir un email en ~5min.\n"
                     "2. Si no recibes el email, escribe a wearecircleup@gmail.com\n"
                     "3. Si quieres donar o ayudar, escribe a +57 3046714626"):
         
-        time.sleep(12)
+        time.sleep(3)
         update_sheets(cloud_id)
+        time.sleep(3)
 
     st.session_state.lock_courses = lock_data('course_name')
     st.rerun()
@@ -460,16 +462,17 @@ def parental_menu():
         
         if submit_button:
             if uploaded_file is not None and data_sharing == True:
+                new_filename = f"{st.session_state.user_auth.email}-{st.session_state.user_auth.cloud_id}.pdf"
+                uploaded_file.name = new_filename
                 with st.spinner("Enviando archivo..."):
                     st.session_state.sign_document = cached_upload_file(google_blobs, uploaded_file)
                     time.sleep(3)
+                    st.session_state.user_auth.parental_consent = 'Authorized'
                     st.session_state.sign_document = parental_logs(st.session_state.sign_document)
                     parental_update(connector(),st.session_state.user_auth.cloud_id)
                     time.sleep(1)
                     send_to_sheets(st.session_state.sign_document,'1lAPcVR3e7MqUJDt2ys25eRY7ozu5HV61ZhWFYuMULOM','Parental Concent')
                     time.sleep(1)
-
-                st.session_state.user_auth.parental_consent = 'Authorized'
             else:
                 st.info("Por favor, carga el archivo y confirma la información.", icon=":material/upload_file:")
 

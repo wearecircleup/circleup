@@ -76,18 +76,18 @@ municipios = [
 ]
 
 consent_items = [
-        "Autorizo la difusión del curso a través de redes sociales, WhatsApp y notificaciones de correo electrónico asociadas a Circle Up.",
+        "Autorizo la difusión del curso a través de redes sociales, WhatsApp y notificaciones de correo electrónico asociadas a Circle Up Community.",
         "En caso de una emergencia personal o de salud que impida mi participación, me comprometo a notificar la cancelación con un mínimo de 24 horas de antelación. La notificación será enviada simultáneamente a wearecircleup@gmail.com, gocircleup@gmail.com y al número de WhatsApp 3046714626.",
         "Autorizo que el material de presentación sea compartido con los participantes que completen el curso.",
-        "Acepto que mi perfil profesional sea presentado de forma anónima en la página web de Circle Up unicamente.",
-        "Me comprometo a no solicitar acceso a los datos personales de los participantes del curso, con excepción de la información estadística agregada que Circle Up decida compartir.",
-        "Me comprometo a notificar a Circle Up de manera inmediata y por escrito sobre cualquier incidente durante el desarrollo de la clase, incluyendo pero no limitado a: daños a la infraestructura, faltas de respeto, o situaciones que comprometan la inclusión de todos los participantes.",
+        "Acepto que mi perfil profesional sea presentado de forma anónima en la página web de Circle Up Community unicamente.",
+        "Me comprometo a no solicitar acceso a los datos personales de los participantes del curso, con excepción de la información estadística agregada que Circle Up Community decida compartir.",
+        "Me comprometo a notificar a Circle Up Community de manera inmediata y por escrito sobre cualquier incidente durante el desarrollo de la clase, incluyendo pero no limitado a: daños a la infraestructura, faltas de respeto, o situaciones que comprometan la inclusión de todos los participantes.",
         "En caso de recibir una queja formal de un participante, me comprometo a responder por escrito en un plazo máximo de 3 días hábiles, dirigiendo mi respuesta exclusivamente a wearecircleup@gmail.com y gocircleup@gmail.com.",
-        "Acepto completar una encuesta al finalizar el curso con el objetivo de contribuir a la mejora continua de los procesos de Circle Up.",
-        "Me comprometo a tomar asistencia al inicio de la clase utilizando la aplicación proporcionada por Circle Up. Entiendo y acepto que no se permitirá el ingreso a participantes que lleguen con más de 15 minutos de retraso.",
-        "Reconozco que Circle Up proporcionará una carta de agradecimiento y gestionará una posible certificación de voluntariado con la Secretaría de Integración Social. Entiendo que la emisión de dicha certificación depende exclusivamente de la Secretaría y no de Circle Up, por lo que acepto que Circle Up no garantiza su expedición.",
+        "Acepto completar una encuesta al finalizar el curso con el objetivo de contribuir a la mejora continua de los procesos de Circle Up Community.",
+        "Me comprometo a tomar asistencia al inicio de la clase utilizando la aplicación proporcionada por Circle Up Community. Entiendo y acepto que no se permitirá el ingreso a participantes que lleguen con más de 15 minutos de retraso.",
+        "Reconozco que Circle Up Community proporcionará una carta de agradecimiento y gestionará una posible certificación de voluntariado con la Secretaría de Integración Social. Entiendo que la emisión de dicha certificación depende exclusivamente de la Secretaría y no de Circle Up Community, por lo que acepto que Circle Up Community no garantiza su expedición.",
         "Me comprometo a mantener la confidencialidad de cualquier información sensible o personal a la que pueda tener acceso durante el curso.",
-        "Acepto que Circle Up pueda utilizar imágenes o grabaciones del curso con fines promocionales o educativos, siempre respetando la privacidad de los participantes.",
+        "Acepto que Circle Up Community pueda utilizar imágenes o grabaciones del curso con fines promocionales o educativos, siempre respetando la privacidad de los participantes.",
         "Entiendo que soy responsable de asegurar que el contenido del curso sea apropiado y no infrinja derechos de autor o propiedad intelectual de terceros."
     ]
 

@@ -145,7 +145,7 @@ class Email:
         plain = content
         html = f""" <html>
                     <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #2c3e50; margin: 0; padding: 0;">
-                        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 800px; margin: 0 auto;">
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 95%; margin: 0 auto;">
                             <tr>
                                 <td style="padding: 20px;">
                                     <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-radius: 10px; overflow: hidden;">
@@ -164,7 +164,7 @@ class Email:
                                         <tr>
                                             <td align="center" style="padding: 15px;">
                                                 <a href="https://www.linkedin.com/company/circleup-community/" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin: 0 10px; text-decoration: none; color: white; font-weight: bold;">LinkedIn</a>
-                                                <a href="https://wa.me/573046714626?text=Hola%20Circle%20Up%20Community" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin: 0 10px; text-decoration: none; color: white; font-weight: bold;">WhatsApp</a>
+                                                <a href="https://wa.me/573046714626?text=Hola%20Circle%20Up%20Community!" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin: 0 10px; text-decoration: none; color: white; font-weight: bold;">WhatsApp</a>
                                                 <a href="https://calendly.com/wearecircleup/15min" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin: 0 10px; text-decoration: none; color: white; font-weight: bold;">Calendly</a>
                                             </td>
                                         </tr>

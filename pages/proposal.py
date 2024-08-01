@@ -144,12 +144,12 @@ def sheets_proposal(data: List[List[str]]):
         return False
 
 def main():
-    st.title("Módulo Final: Preparación para el Lanzamiento del Curso")
+    st.title("Acuerdo de Voluntariado Circle Up Community")
 
     st.write("""
-    Bienvenido al módulo final de preparación para el lanzamiento de su curso. 
-    En esta etapa crucial, nos aseguraremos de que todos los elementos estén en su lugar 
-    para garantizar una experiencia educativa exitosa y enriquecedora.
+    Bienvenido al paso final para lanzar tu curso con Circle Up Community.
+    Aquí formalizarás tu propuesta de curso de 2 horas para un sábado y aceptarás nuestro acuerdo de voluntariado.
+    Al completar este formulario, recibirás el acuerdo de voluntariado por correo electrónico en aproximadamente 2 minutos.
     """)
 
     with st.form("curso_form"):
@@ -319,18 +319,18 @@ def main():
             
             st.success(
                 """
-                ¡Felicidades! 🎉
+                El Acuerdo de Voluntariado ha sido enviado a tu correo electrónico.
 
-                En Circle Up Community, valoramos tu participación y esfuerzo.
-                
-                Gracias por ser parte de este emocionante proceso de co-creación.
-                Tu contribución es fundamental para nuestro éxito colectivo.
-                
-                **¡Todos los créditos son tuyos!** 🏆
-                
-                Continúa así y sigamos construyendo juntos.
+                :green[**Pasos a seguir**]
+                1. Firma la carta de :green-background[Acuerdo de Voluntariado Circle Up Community.]
+                2. Adjunta una :green-background[fotocopia de tu cédula.]
+                3. Envía ambos documentos en :green-background[un solo archivo PDF.]
+
+                Estos documentos son esenciales para tu participación oficial.
+
+                :green[**¡Bienvenid@ a Circle Up Community! Juntos haremos la diferencia.**]
                 """,
-                icon=":material/celebration:"
+                icon=":material/handshake:"
             )
 
             st.balloons()
@@ -343,12 +343,22 @@ def main():
 if st.session_state.enable_form:
     main()
 else:
-    st.title("Módulo Final: Preparación para el Lanzamiento del Curso")
+    st.title("Acuerdo de Voluntariado Circle Up Community")
 
     st.write("""
-    Bienvenido al módulo final de preparación para el lanzamiento de su curso. 
-    En esta etapa crucial, nos aseguraremos de que todos los elementos estén en su lugar 
-    para garantizar una experiencia educativa exitosa y enriquecedora.
+    Bienvenido al paso final para lanzar tu curso con Circle Up Community.
+    Aquí formalizarás tu propuesta de curso de 2 horas para un sábado y aceptarás nuestro acuerdo de voluntariado.
+    Al completar este formulario, recibirás el acuerdo de voluntariado por correo electrónico en aproximadamente 2 minutos.
+    """)
+
+    st.info("""
+    Es crucial que firmes este documento y lo envíes de vuelta en :blue-background[un solo PDF] junto con una copia de tu cédula.Tu curso se programará oficialmente una vez recibamos estos documentos.
+    Por favor, revisa y completa cuidadosamente cada sección. Tu atención a los detalles asegurará una colaboración exitosa.
+    """)
+
+    st.write("""
+    Tu participación es valiosa para nuestra comunidad. Al formalizar tu propuesta, te unes a una red comprometida con el crecimiento colectivo.
+    Agradecemos tu dedicación y esperamos el impacto positivo que crearemos juntos. ¡Estamos emocionados por dar vida a tu propuesta!
     """)
 
     st.title("1. Confirmación de Circle Up Community")
@@ -371,19 +381,24 @@ else:
     st.info("El voluntario debe leer detenidamente y aceptar los siguientes términos y condiciones", icon=":material/lists:")
     st.success("¡Tarea completada! Tu progreso ha sido guardado.", icon=":material/library_add_check:")
 
-    st.info("""
-    **Último paso: Firma del documento**
-    ¡Estamos tan emocionados como tú por la publicación!
+    st.success(
+        """
+        El Acuerdo de Voluntariado ha sido enviado a tu correo electrónico.
 
-    Enviar el documento es súper fácil y rápido. 
-    En solo unos clics estarás listo para comenzar. 
-    """, icon=":material/signature:")
+        :green[**Pasos a seguir**]
+        1. Firma la carta de :green-background[Acuerdo de Voluntariado Circle Up Community.]
+        2. Adjunta una :green-background[fotocopia de tu cédula.]
+        3. Envía ambos documentos en :green-background[un solo archivo PDF.]
+
+        Estos documentos son esenciales para tu participación oficial.
+
+        :green[**¡Bienvenid@ a Circle Up Community! Juntos haremos la diferencia.**]
+        """,
+        icon=":material/handshake:"
+    )
+
     
-    st.success("Gracias por ser parte de este proceso de co-creación. Tu contribución es fundamental para nuestro éxito colectivo.", icon=":material/draw:")
 
-    st.divider()
-    if st.button(':material/hiking: Volver al Inicio', type="secondary", help='Volver al menú principal', use_container_width=True):
-        st.switch_page('app.py')
 menu()
 
 st.divider()

@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta, time
+import pytz
+import locale
 
 @dataclass
 class CategoryUtils:
@@ -25,6 +27,22 @@ class CategoryUtils:
 
         return "No encontrado"
 
+
+    @staticmethod
+    def format_date(fecha_str,city):
+        locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
+        
+        fecha = datetime.strptime(fecha_str, '%d-%m-%Y')
+        zona_colombia = pytz.timezone('America/Bogota')
+        fecha_colombia = zona_colombia.localize(fecha)
+        
+        dia_semana = fecha_colombia.strftime('%A').capitalize()
+        dia = fecha_colombia.day
+        mes = fecha_colombia.strftime('%B').lower()
+        año = fecha_colombia.year
+        
+        return f"{dia_semana}, {dia} de {mes} de {año}, {city}"
+    
     @staticmethod
     def parental_review(birth_date_str: str) -> str:
         try:
