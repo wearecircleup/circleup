@@ -36,6 +36,12 @@ class Users:
         skills: List[str] = field(default_factory=list)
         how_to_learn: List[str] = field(default_factory=list)
         cloud_id:str = None
+        autho:str = None
+        parental_consent:str = 'Pending'
+
+        # NotApplicable = "Not Applicable"
+        # Pending = "Pending",
+        # Authorized = "Authorized"
 
         def as_dict(self):
                 """

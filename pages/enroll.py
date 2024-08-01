@@ -6,8 +6,13 @@ import json
 from classes.utils_class import CategoryUtils
 from classes.spread_class import Sheets
 from classes.firestore_class import Firestore
+from classes.blobs_class import GoogleBlobs
+from classes.users_class import Users
 from typing import Dict, List
 from itertools import chain
+from google.cloud.exceptions import NotFound, Conflict
+from googleapiclient.errors import HttpError
+import firebase_admin.exceptions
 import time
 
 st.set_page_config(
@@ -34,7 +39,16 @@ def connector():
     Conn = Firestore(db)
     return Conn
 
-@st.cache_data(ttl=1800, show_spinner=False)
+@st.cache_data(ttl=900,show_spinner=False)
+def cached_upload_file(google_blobs, file):
+    try:
+        file_link = google_blobs.upload_file(file)
+        return str(file_link) if file_link is not None else ""
+    except Exception as e:
+        st.error(f"Error al subir el archivo: {str(e)}")
+        return ""
+
+@st.cache_data(ttl=900, show_spinner=False)
 def get_course_data():
     try:
         Conn = connector()
@@ -139,9 +153,9 @@ def course_description(course):
 def get_uniques(df, field):
     return df[field].str.split(',', expand=True).stack().unique().tolist()
 
-def send_to_sheets(data: List[List[str]]):
+def send_to_sheets(data: List[List[str]],sheet_id,sheet_name):
     try:
-        sheet = Sheets('1c_Pjefz-dtpBI2Yq6iPvPnSC5IkkWh7eCmdWaG39tzw','Enrollment')
+        sheet = Sheets(sheet_id,sheet_name)
         sheet.create(data)
         return True
     except Exception as e:
@@ -190,7 +204,7 @@ def enrollment_notice(data: Dict, selected_course):
                     "3. Si quieres donar o ayudar, escribe a +57 3046714626"):
         
         time.sleep(12)
-        send_to_sheets(sheet_entry)
+        send_to_sheets(sheet_entry,'1c_Pjefz-dtpBI2Yq6iPvPnSC5IkkWh7eCmdWaG39tzw','Enrollment')
 
     st.session_state.lock_courses = lock_data('course_name')    
     st.rerun()
@@ -272,7 +286,7 @@ def entry_unregister():
         st.warning("Por el momento no tenemos cursos disponibles para ti. Si crees que esto es un error, por favor contáctanos a wearecircleup@gmail.com.", icon=":material/notifications:")
 
 
-    if st.button("Volver al menú principal", type="secondary"):
+    if st.button(":material/explore: Volver a Explorar",type='primary',use_container_width=True):
         st.session_state.show_manage = False
         st.rerun()
 
@@ -363,40 +377,115 @@ def entry_registration():
     else:
         st.warning("Por el momento no tenemos cursos disponibles para tu rango de edad, pero no te preocupes. Estamos trabajando constantemente para ampliar nuestra oferta. Te avisaremos tan pronto como tengamos opciones adecuadas para ti.", icon=":material/notifications:")
 
-    if st.button("Volver al menú principal",type='primary',use_container_width=True):
+    if st.button(":material/explore: Volver a Explorar",type='primary',use_container_width=True):
         st.session_state.show_explore = False
         st.rerun()
 
-st.title("Explora Nuestros Cursos")
-st.write("Bienvenido a nuestra plataforma de aprendizaje. Aquí podrás encontrar cursos diseñados para potenciar tus habilidades y conocimientos.")
-st.warning(":orange[**Duración Cursos**] :orange-background[2 horas maximo], sesión exclusiva y :orange-background[Cupos limitados]", icon=":material/attach_file:")
+def parental_update(connector: Firestore, cloud_id: str):
+    try:
+        connector.update_document('users_collection', cloud_id, {'parental_consent': 'Authorized'})
+        with st.spinner(":material/sync: Concediendo accesos... Un momento"):
+            time.sleep(4)
 
-if 'lock_courses' not in st.session_state:
-        st.session_state.lock_courses = lock_data('course_name')
+    except firebase_admin.exceptions.FirebaseError as e:
+        st.error(f"Error de Firebase: {str(e)}")
+        return
 
-if 'confirmation_message' in st.session_state:
-    st.success(st.session_state.confirmation_message,icon=":material/data_check:")
-    del st.session_state.confirmation_message
+    except Exception as e:
+        st.error(f"Error inesperado: {str(e)}")
+        return
 
-if not st.session_state.show_explore and not st.session_state.show_manage:
-    st.info("**Paso 0:** :blue-background[¿Qué te gustaría hacer?] En :blue[**Explorar Cursos**] puedes registrarte en cursos que te interesen, y en :blue[**Gestionar Inscripciones**] puedes revisar tus cursos inscritos o cancelar tu participación.", icon=":material/self_improvement:")
+    st.success("La solicitud ha sido aprobada exitosamente.")
+    st.rerun()
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.button("Explorar Cursos", key="discover_courses", type='primary', 
-                use_container_width=True, on_click=show_explore)
-    with col2:
-        st.button("Gestionar Inscripciones", key="manage_registrations", type='secondary', 
-                use_container_width=True, on_click=show_manage)
+def parental_logs(link_auth=None):
+    utils = CategoryUtils()
+    return [
+        utils.get_current_date(),
+        utils.date_to_day_of_week(),
+        utils.time_to_category(),
+        st.session_state.user_auth.first_name,
+        st.session_state.user_auth.last_name,
+        utils.age_to_category(st.session_state.user_auth.dob),
+        st.session_state.user_auth.email,
+        st.session_state.user_auth.user_role,
+        st.session_state.user_auth.city_residence,
+        st.session_state.user_auth.cloud_id,
+        link_auth]
 
-if st.session_state.show_explore:
-    entry_registration()
+def main():
+    st.warning(":orange[**Duración Cursos**] :orange-background[2 horas maximo], sesión exclusiva y :orange-background[Cupos limitados]", icon=":material/attach_file:")
 
-if st.session_state.show_manage:
-    entry_unregister()
+    if 'lock_courses' not in st.session_state:
+            st.session_state.lock_courses = lock_data('course_name')
 
-st.divider()
-if st.button(':material/hiking: Volver al Inicio', type="secondary", help='Volver al menú principal', use_container_width=True):
+    if 'confirmation_message' in st.session_state:
+        st.success(st.session_state.confirmation_message,icon=":material/data_check:")
+        del st.session_state.confirmation_message
+
+    if not st.session_state.show_explore and not st.session_state.show_manage:
+        st.info("**Paso 0:** :blue-background[¿Qué te gustaría hacer?] En :blue[**Explorar Cursos**] puedes registrarte en cursos que te interesen, y en :blue[**Gestionar Inscripciones**] puedes revisar tus cursos inscritos o cancelar tu participación.", icon=":material/self_improvement:")
+
+        col1, col2 = st.columns(2)
+        with col1:
+            st.button(":material/travel_explore: Explorar Cursos", key="discover_courses", type='primary', 
+                    use_container_width=True, on_click=show_explore)
+        with col2:
+            st.button(":material/bookmarks: Gestionar Inscripciones", key="manage_registrations", type='secondary', 
+                    use_container_width=True, on_click=show_manage)
+
+    if st.session_state.show_explore:
+        entry_registration()
+
+    if st.session_state.show_manage:
+        entry_unregister()
+
+def parental_menu():
+    st.info(
+            f"Hola {' '.join([item.capitalize() for item in st.session_state.user_auth.first_name.split(' ')])}, "
+            "Circle Up Community tiene un único requisito importante para participantes menores de 18 años, una :blue-background[autorización] de tu representante. Es un proceso sencillo que solo se hace una vez"
+            "\n\n• Descarga y completa el [Consentimiento Informado Autorización Menores](https://drive.google.com/file/d/1XQbCa3bo46WBEZ1jM4vYJC06Ts_bJ9vr) con tu representante."
+            "\n\n• Sube el archivo junto con una copia del documento de identidad del mismo representante en un solo [archivo PDF](https://www.ilovepdf.com/es/unir_pdf). Al cargar este documento, tendrás :blue-background[acceso] libre a Circle Up Community.",
+            icon=":material/fingerprint:"
+        )
+
+    google_blobs = GoogleBlobs('1Idxz8Iyx67XNXsw-kOVMJK__as8vOu6q')
+
+    with st.form("upload_form"):
+        uploaded_file = st.file_uploader("Documento Firmado Drive", type=['pdf'])
+        
+        data_sharing = st.checkbox("Confirmo que la información proporcionada es verídica y precisa, y que el archivo cargado es un [único PDF](https://www.ilovepdf.com/es/unir_pdf) que contiene la [autorización firmada](https://drive.google.com/file/d/1XQbCa3bo46WBEZ1jM4vYJC06Ts_bJ9vr) y la :blue-background[fotocopia de la cédula] del representante legal.")
+        
+        submit_button = st.form_submit_button(":material/send: Enviar Consentimiento Informado",use_container_width=True)
+        
+        if submit_button:
+            if uploaded_file is not None and data_sharing == True:
+                with st.spinner("Enviando archivo..."):
+                    st.session_state.sign_document = cached_upload_file(google_blobs, uploaded_file)
+                    time.sleep(3)
+                    st.session_state.sign_document = parental_logs(st.session_state.sign_document)
+                    parental_update(connector(),st.session_state.user_auth.cloud_id)
+                    time.sleep(1)
+                    send_to_sheets(st.session_state.sign_document,'1lAPcVR3e7MqUJDt2ys25eRY7ozu5HV61ZhWFYuMULOM','Parental Concent')
+                    time.sleep(1)
+
+                st.session_state.user_auth.parental_consent = 'Authorized'
+            else:
+                st.info("Por favor, carga el archivo y confirma la información.", icon=":material/upload_file:")
+
+try:
+    st.title("Explora Nuestros Cursos")
+    st.write("Bienvenido a nuestra plataforma de aprendizaje. Aquí podrás encontrar cursos diseñados para potenciar tus habilidades y conocimientos.")
+
+    if st.session_state.user_auth.parental_consent in ['Not Applicable','Authorized']:
+        main()
+    else:
+        parental_menu()
+
+    st.divider()
+    if st.button(':material/hiking: Volver al Inicio', type="secondary", help='Volver al menú principal', use_container_width=True):
+        st.switch_page('app.py')
+except AttributeError:
     st.switch_page('app.py')
 
 menu()

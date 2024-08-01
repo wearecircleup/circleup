@@ -4,7 +4,6 @@ from menu import menu
 import pandas as pd
 from utils.body import (html_banner, pensum_email_file)
 from classes.email_class import Email
-from classes.pensum_class import PensumLoader
 from classes.utils_class import CategoryUtils
 from google.cloud import firestore
 

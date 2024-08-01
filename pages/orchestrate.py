@@ -7,9 +7,11 @@ from classes.firestore_class import Firestore
 from classes.email_class import Email
 from classes.spread_class import Sheets
 from classes.utils_class import CategoryUtils
-from google.cloud.firestore_v1.base_query import FieldFilter
-
-
+from google.cloud.exceptions import NotFound, Conflict
+from googleapiclient.errors import HttpError
+import firebase_admin.exceptions
+import smtplib
+import time
 
 st.set_page_config(
     page_title="Circle Up",
@@ -68,7 +70,7 @@ def manage_volunteer_requests(connector: Firestore):
                 st.write(f"**Educación:** {selected_request.data.get('education')}")
                 st.write(f"**Profesión:** {selected_request.data.get('profession_category')}")
             with col2:
-                st.write(f"**Id:** {selected_request.data.get('cloud_id')}")
+                st.write(f"**Id:** {selected_request.data.get('cloud_id_user')}")
                 st.write(f"**Experiencia:** {selected_request.data.get('experience')} año(s)")
                 st.write(f"**Disponibilidad:** {selected_request.data.get('availability')}")
                 st.write(f"**Tiempo disponible:** {selected_request.data.get('time_availability')}")
@@ -80,40 +82,90 @@ def manage_volunteer_requests(connector: Firestore):
             col1, col2 = st.columns(2)
             with col1:
                 if st.button("Aprobar solicitud", use_container_width=True, disabled=selected_status == 'Approved'):
-                    approve_request(connector, selected_request.data.get('cloud_id'))
+                    approve_request(connector, selected_request.data.get('cloud_id_user'), selected_request.data.get('cloud_id'))
                     st.success(f"Solicitud aprobada con éxito.", icon=":material/check_circle:")
             with col2:
                 if st.button("Denegar solicitud", use_container_width=True, disabled=selected_status == 'Denied'):
-                    deny_request(connector, selected_request.data.get('cloud_id'))
+                    deny_request(connector, selected_request.data.get('cloud_id_user'), selected_request.data.get('cloud_id'))
                     st.success(f"Solicitud denegada con éxito.", icon=":material/cancel:")
 
             email_button_disabled = selected_status == 'Pending' or selected_request.data.get('notification') == 'Send'
             if st.button("Enviar Email de Notificación", disabled=email_button_disabled, use_container_width=True):
                 send_notification_email(connector, selected_request.data)
 
-def approve_request(connector: Firestore, cloud_id: str):
-    # Actualizar el rol de usuario a 'Volunteer' en users_collection
-    connector.update_document('users_collection', cloud_id, {'user_role': 'Volunteer'})
-    
-    # Actualizar el estado a 'Approved' y la notificación a 'Pending' en volunteer_request
-    connector.update_document('volunteer_request', cloud_id, {'status': 'Approved', 'notification': 'Pending','user_role': 'Volunteer'})
+def approve_request(connector: Firestore, cloud_id_user: str,cloud_id: str):
+    try:
+        # Actualizar el rol de usuario a 'Volunteer' en users_collection
+        connector.update_document('users_collection', cloud_id_user, {'user_role': 'Volunteer'})
+        with st.spinner(":material/sync: Asignando Rol Voluntario... Esto puede tardar ~5 segs"):
+            time.sleep(4)
+        # Actualizar el estado a 'Approved' y la notificación a 'Pending' en volunteer_request
+        connector.update_document('volunteer_request', cloud_id, {'status': 'Approved', 'notification': 'Pending', 'user_role': 'Volunteer'})
+        with st.spinner(":material/schedule_send: Creando Notificación Aprovado... Esto puede tardar ~5 segs"):
+            time.sleep(4)
+        # Update Google Sheets
+        last_update = CategoryUtils().get_current_date()
+        sheet = Sheets('1lAPcVR3e7MqUJDt2ys25eRY7ozu5HV61ZhWFYuMULOM', 'Be Volunteer')
+        sheet.replace_values(cloud_id, {'status': 'Approved', 'notification': 'Pending', 'user_role': 'Volunteer', 'last_update': last_update})
 
-    #Update Google Sheets
-    last_update = CategoryUtils().get_current_date()
-    sheet = Sheets('1lAPcVR3e7MqUJDt2ys25eRY7ozu5HV61ZhWFYuMULOM','Be Volunteer')
-    sheet.replace_values(cloud_id,{'status': 'Approved', 'notification': 'Pending','user_role': 'Volunteer','last_update':last_update})
+    except NotFound as e:
+        st.error(f"Error: El documento con ID {cloud_id} no fue encontrado. Detalles: {str(e)}")
+        return
 
+    except Conflict as e:
+        st.error(f"Error: Conflicto al actualizar el documento. Puede que ya haya sido modificado. Detalles: {str(e)}")
+        return
+
+    except firebase_admin.exceptions.FirebaseError as e:
+        st.error(f"Error de Firebase: {str(e)}")
+        return
+
+    except HttpError as e:
+        st.error(f"Error al actualizar Google Sheets: {str(e)}")
+        return
+
+    except Exception as e:
+        st.error(f"Error inesperado: {str(e)}")
+        return
+
+    st.success("La solicitud ha sido aprobada exitosamente.")
     st.rerun()
 
-def deny_request(connector: Firestore, cloud_id: str):
-    connector.update_document('users_collection', cloud_id, {'user_role': 'Learner'})
-    # Actualizar el estado a 'Denied' y la notificación a 'Pending' en volunteer_request
-    connector.update_document('volunteer_request', cloud_id, {'status': 'Denied', 'notification': 'Pending','user_role': 'Learner'})
-    
-    #Update Google Sheets
-    last_update = CategoryUtils().get_current_date()
-    sheet = Sheets('1lAPcVR3e7MqUJDt2ys25eRY7ozu5HV61ZhWFYuMULOM','Be Volunteer')
-    sheet.replace_values(cloud_id,{'status': 'Denied', 'notification': 'Pending','user_role': 'Learner','last_update':last_update})
+def deny_request(connector: Firestore, cloud_id_user: str,cloud_id: str):
+    try:
+        # Actualizar el rol de usuario a 'Learner' en users_collection
+        connector.update_document('users_collection', cloud_id_user, {'user_role': 'Learner'})
+        with st.spinner(":material/sync: Asignando Rol Learner... ~5 segs"):
+            time.sleep(4)
+        # Actualizar el estado a 'Denied' y la notificación a 'Pending' en volunteer_request
+        connector.update_document('volunteer_request', cloud_id, {'status': 'Denied', 'notification': 'Pending', 'user_role': 'Learner'})
+        with st.spinner(":material/schedule_send: Creando Notificación Denegado... ~5 segs"):
+            time.sleep(4)
+        last_update = CategoryUtils().get_current_date()
+        sheet = Sheets('1lAPcVR3e7MqUJDt2ys25eRY7ozu5HV61ZhWFYuMULOM', 'Be Volunteer')
+        sheet.replace_values(cloud_id, {'status': 'Denied', 'notification': 'Pending', 'user_role': 'Learner', 'last_update': last_update})
+
+    except NotFound as e:
+        st.error(f"Error: El documento con ID {cloud_id} no fue encontrado. Detalles: {str(e)}")
+        return
+
+    except Conflict as e:
+        st.error(f"Error: Conflicto al actualizar el documento. Puede que ya haya sido modificado. Detalles: {str(e)}")
+        return
+
+    except firebase_admin.exceptions.FirebaseError as e:
+        st.error(f"Error de Firebase: {str(e)}")
+        return
+
+    except HttpError as e:
+        st.error(f"Error al actualizar Google Sheets: {str(e)}")
+        return
+
+    except Exception as e:
+        st.error(f"Error inesperado: {str(e)}")
+        return
+
+    st.success("La solicitud ha sido denegada exitosamente.")
     st.rerun()
 
 def send_notification_email(connector: Firestore, volunteer_data: dict):
@@ -123,28 +175,56 @@ def send_notification_email(connector: Firestore, volunteer_data: dict):
     is_approved = volunteer_data['status'] == 'Approved'
 
     if is_approved:
-        subject = "¡Felicidades! Tu solicitud de voluntariado ha sido aprobada"
+        subject = "¡Bienvenid@ Solicitud aprobada!"
+
         content = f"""
-        <p>Estimado/a <strong>{full_name}</sstrong>,</p>
+            <p>Hola <strong>{full_name}</strong>,</p>
 
-        <p>Nos complace informarte que tu solicitud para ser voluntario/a en <strong>Circle Up</strong> ha sido <strong>aprobada</strong>.</p>
-        <p>Queremos felicitarte por dar este importante paso para ayudar a nuestra comunidad.</p>
-        <p>Para continuar con el proceso, necesitamos que completes los siguientes pasos:</p>
+            <p>¡Felicitaciones! Tu solicitud para ser voluntario/a en <strong>Circle Up Community</strong> ha sido <strong>aprobada</strong>. Estamos muy contentos de tenerte con nosotros.</p>
+            <p>Queremos que tu experiencia sea increíble y sencilla. Aquí está lo que necesitas saber:</p>
 
-        <ol>
-            <li>Responde a este <a href="https://forms.gle/USqzB8a53rPVXLHVA">breve formulario</a></li>
-            <li>Agenda una <a href="https://calendly.com/wearecircleup/15min">reunión con nosotros</a> para la conceptualización de la idea y acompañamiento en el proceso</li>
-        </ol>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+                <tr>
+                    <th style="text-align: left; padding: 12px; background-color: #f2f2f2; border: 1px solid #ddd; width: 30%;">Tu compromiso</th>
+                    <td style="padding: 12px; border: 1px solid #ddd;">
+                        • 2 horas para co-crear tu curso con nosotros<br>
+                        • 2 horas para dar la clase<br>
+                        <strong>¡Solo 4 horas en total!</strong>
+                    </td>
+                </tr>
+                <tr>
+                    <th style="text-align: left; padding: 12px; background-color: #f2f2f2; border: 1px solid #ddd;">Desarrollo del curso</th>
+                    <td style="padding: 12px; border: 1px solid #ddd;">
+                        • Tú aportas tus ideas y conocimientos<br>
+                        • Nosotros creamos el 90% del material y la presentación
+                    </td>
+                </tr>
+                <tr>
+                    <th style="text-align: left; padding: 12px; background-color: #f2f2f2; border: 1px solid #ddd;">Detalles de tu clase</th>
+                    <td style="padding: 12px; border: 1px solid #ddd;">
+                        Piensa en:<br>
+                        • ¿Qué sábado te gustaría dar la clase? (Preferimos presencial)<br>
+                        • ¿Cuántas personas máximo aceptarías?<br>
+                        • ¿Qué edades crees que serían las mejores para tu curso?
+                    </td>
+                </tr>
+                <tr>
+                    <th style="text-align: left; padding: 12px; background-color: #f2f2f2; border: 1px solid #ddd;">Próximo paso</th>
+                    <td style="padding: 12px; border: 1px solid #ddd;">
+                        <a href="https://calendly.com/wearecircleup/15min" style="color: #0066cc; text-decoration: none;">Agenda una reunión con nosotros</a> para planear todo
+                    </td>
+                </tr>
+            </table>
 
-        <p><strong>Estamos emocionados de tenerte en nuestro equipo y ansiosos por comenzar a trabajar juntos.</strong></p>
-        <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
-        <p><strong>¡Bienvenido/a a Circle Up!</strong></p>
+            <p>Recuerda, estamos aquí para ayudarte en cada paso. Queremos que disfrutes compartiendo tu conocimiento con la comunidad.</p>
 
-        <p>Atentamente,<br>
-        Circle Up Community ⚫</p>
-        """
+            <p><strong>¡Gracias por unirte! Tu aporte va a hacer una gran diferencia.</strong></p>
+
+            <p>Un abrazo,<br>
+            Circle Up Community ⚫</p>
+            """
     else:
-        subject = "Actualización sobre tu solicitud de voluntariado"
+        subject = "Solicitud Voluntariado"
         content = f"""
         <p>Estimado/a <strong>{full_name}</strong>,</p>
 
@@ -161,17 +241,39 @@ def send_notification_email(connector: Firestore, volunteer_data: dict):
 
     try:
         email_sender.send_custom_email(recipient_email, full_name, subject, content)
-        connector.update_document('volunteer_request', volunteer_data['cloud_id'], {'notification': 'Send'})
+        with st.spinner(":material/schedule_send: Enviando Notificación... ~5 segs"):
+            time.sleep(4)
+        try:
+            with st.spinner(":material/schedule_send: Confirmando Notificación... ~5 segs"):
+                time.sleep(4)
+            connector.update_document('volunteer_request', volunteer_data['cloud_id'], {'notification': 'Send'})
+        except NotFound:
+            st.error(f"Error: No se encontró el documento del voluntario en Firestore.")
+            return
+        except Conflict:
+            st.warning(f"Advertencia: Conflicto al actualizar el documento en Firestore. Puede que ya haya sido modificado.")
+        except firebase_admin.exceptions.FirebaseError as e:
+            st.error(f"Error de Firebase al actualizar el documento: {str(e)}")
+            return
         
-        # Update Google Sheets
-        last_update = CategoryUtils().get_current_date()
-        sheet = Sheets('1lAPcVR3e7MqUJDt2ys25eRY7ozu5HV61ZhWFYuMULOM','Be Volunteer')
-        sheet.replace_values(volunteer_data['cloud_id'],{'notification': 'Send','last_update':last_update})
+        try:
+            last_update = CategoryUtils().get_current_date()
+            sheet = Sheets('1lAPcVR3e7MqUJDt2ys25eRY7ozu5HV61ZhWFYuMULOM','Be Volunteer')
+            with st.spinner(":material/sync: Actualizar Notificaciónes... ~5 segs"):
+                time.sleep(4)
+            sheet.replace_values(volunteer_data['cloud_id'],{'notification': 'Send','last_update':last_update})
+        except HttpError as e:
+            st.error(f"Error al actualizar Google Sheets: {str(e)}")
+            return
+        
         st.info("Enviando email de notificación...", icon=":material/email:")
-        st.success(f"Email enviado exitosamente a {full_name}", icon=":material/email_check:")
-        st.rerun()
-    except Exception as e:
+        st.success(f"Email enviado exitosamente a {full_name}", icon=":material/mark_email_read:")
+    
+    except smtplib.SMTPException as e:
         st.error(f"Error al enviar el email: {str(e)}")
+    except Exception as e:
+        st.error(f"Error inesperado: {str(e)}")
+
 
 connector = connector()
 manage_volunteer_requests(connector)

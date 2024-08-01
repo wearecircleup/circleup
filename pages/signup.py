@@ -52,6 +52,8 @@ def connector():
     return Conn
 
 def form_reponses():
+    utils = CategoryUtils()
+
     form_users_class = {
         'first_name':st.session_state._first_name, 
         'last_name':st.session_state._last_name,
@@ -79,7 +81,8 @@ def form_reponses():
         'skills':st.session_state._skills,
         'how_to_learn':st.session_state._how_to_learn,
         'weaknesses':st.session_state._weaknesses,
-        'strengths':st.session_state._strengths
+        'strengths':st.session_state._strengths,
+        'parental_consent':utils.parental_review(st.session_state._dob.strftime('%d-%m-%Y'))
     }
     return form_users_class
 
@@ -116,7 +119,6 @@ FIELD_LABELS = {
 
 def prepare_sheets_data(instance_data):
     utils = CategoryUtils()
-    now = datetime.now()
     return [
         utils.get_current_date(),
         utils.date_to_day_of_week(),
@@ -133,7 +135,7 @@ def prepare_sheets_data(instance_data):
         'signup'
     ]
 
-@st.cache_data(ttl=3600,show_spinner=False)
+@st.cache_data(ttl=900,show_spinner=False)
 def send_to_sheets(data: List[List[str]]):
     try:
         sheet = Sheets('1lAPcVR3e7MqUJDt2ys25eRY7ozu5HV61ZhWFYuMULOM','Sign Up')
@@ -224,6 +226,16 @@ def signup_firestore():
     return messages
 
 def register_users():
+
+    st.info("""
+    :blue[**Importante**]
+    • Todos los datos deben corresponder al participante.
+    • Si es menor de edad, incluya los datos de su tutor legal al final del formulario.
+    • De lo contrario, esa información se usará como contacto de emergencia.
+    • Al completar este formulario, declaras que la información proporcionada es verdadera y precisa.
+    """, icon=":material/fingerprint:")
+    
+
     st.text_input(label="Nombre",placeholder="Napoleón",key="_first_name",help=st.session_state.form_definitions['_first_name'])
     st.text_input(label="Apellido",placeholder="Bonaparte",key="_last_name",help=st.session_state.form_definitions['_last_name']) 
     
@@ -236,7 +248,7 @@ def register_users():
     st.warning(":orange[**¡Doble check!**] Un número correcto nos mantiene conectados", icon=":material/security_update_good:")
     st.text_input(label="Telefono Celular",placeholder="555-888-9999",key="_phone_number",help=st.session_state.form_definitions['_phone_number'])
 
-    st.warning(":orange[**¡Doble check!**] Tu edad nos ayuda a ofrecerte cursos adecuados.", icon=":material/event:")
+    st.warning(":orange[**¡Doble check!**] Tu fecha de nacimiento nos ayuda a personalizar tu experiencia.", icon=":material/event:")
     st.date_input(label="Fecha Nacimiento", format="DD-MM-YYYY", value=dt.date(2000,1,1), min_value=dt.date(1940,1,1),max_value=dt.date(2020,12,31), key="_dob",help=st.session_state.form_definitions['_dob'])
     
     st.selectbox(label="Genero",index=0,options=st.session_state.gender,key="_gender",help=st.session_state.form_definitions['_gender'])
@@ -294,9 +306,5 @@ sing_up()
 st.divider()
 if st.button(':material/hiking: Volver al Inicio', type="secondary", help='Volver al menú principal', use_container_width=True):
     st.switch_page('app.py')
-
-# try:
-# except:
-#     st.switch_page("app.py")
 
 menu()

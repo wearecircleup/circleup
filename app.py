@@ -94,10 +94,10 @@ def show_navigation():
         pages["Ser Voluntario"] = "pages/volunteering.py"
     
     if st.session_state.user_auth.user_role in ['Volunteer', 'Admin']:
-        pages["Crear Ideas"] = "pages/make.py"
         pages["Proponer Curso"] = "pages/proposal.py"
     
     if st.session_state.user_auth.user_role == 'Admin':
+        pages["Crear Ideas"] = "pages/make.py"
         pages["Gestión Voluntarios"] = "pages/orchestrate.py"
         pages["Revisar Cursos"] = "pages/rollout.py"
 

@@ -19,7 +19,7 @@ def brainstorming(profile: str, client) -> str:
     </Perfil>
     
     <Para cada propuesta, incluye>
-    1. Título conciso y atractivo. Formato: #### Titulo Academico Corto | :blue[**Titulo Marketing Corto**]
+    1. Título conciso y atractivo. Formato: #### Titulo Academico Corto | Titulo Marketing Corto
 
     2. Párrafo descriptivo y argumentativo que (MAXIMO 70 TOKENS):
     - Detalle el contenido específico del curso (ej. Python: estructuras de datos, listas, tuplas).
@@ -56,7 +56,7 @@ def create_community_academic_presentation_schemas() -> List[ResponseSchema]:
         ResponseSchema(name="slide1_title", description="Título conciso y atractivo para la presentación."),
         ResponseSchema(name="slide1_objective", description="Objetivo principal de la sesión (1 oración)."),
         ResponseSchema(name="slide2_icebreaker_title", description="Título de la actividad dinámica inicial."),
-        ResponseSchema(name="slide2_icebreaker_instructions", description="Instrucciones breves para una actividad dinámica, divertida, colaborativa, participativa,  sin materiales (máximo 60 palabras)."),
+        ResponseSchema(name="slide2_icebreaker_instructions", description="Instrucciones breves para una actividad dinámica, divertida, participativa, sin materiales (máximo 60 palabras)."),
         ResponseSchema(name="slide2_icebreaker_purpose", description="Propósito de la actividad en relación con el tema (1 oración)."),
         ResponseSchema(name="slide3_rhetorical_question", description="Pregunta retórica para estimular la participación y reflexión."),
         ResponseSchema(name="slide4_concept1_title", description="Título del primer concepto fundamental."),
@@ -99,6 +99,7 @@ def generate_community_academic_presentation_content(context: str, client) -> Di
         - Enfóquese en aplicaciones prácticas, liderazgo y pensamiento crítico.
         - Considere el uso de recursos de código abierto unicamente.
         - La presentación es dirigida por un voluntario que comparte conocimiento con su comunidad.
+        - Preferible pero no limitado a Colombia y América Latina.
         """
     )
 

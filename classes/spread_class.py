@@ -23,7 +23,7 @@ class Sheets:
         except gspread.exceptions.CellNotFound:
             return -1
 
-    @st.cache_data(ttl=3600)
+    @st.cache_data(ttl=900,show_spinner=False)
     def create(self, data: List[List[str]]) -> bool:
         try:
             # Asegurarse de que data sea una lista de listas
@@ -46,7 +46,6 @@ class Sheets:
             st.error(f"Error al crear el registro: {str(e)}")
             return False
         
-
     def replace_values(self, cloud_id: str, updates: Dict[str, Any]) -> bool:
         try:
             # Obtener todas las cabeceras
@@ -89,7 +88,7 @@ class Sheets:
             st.error(f"Error al actualizar los valores: {str(e)}")
             return False
 
-    @st.cache_data(ttl=3600)
+    @st.cache_data(ttl=900,show_spinner=False)
     def update(self, email: str, new_data: List[str]) -> bool:
         try:
             row = self._find_row_by_email(email)
@@ -103,7 +102,7 @@ class Sheets:
             st.error(f"Error al actualizar el registro: {str(e)}")
             return False
 
-    @st.cache_data(ttl=3600)
+    @st.cache_data(ttl=900,show_spinner=False)
     def delete(self, email: str) -> bool:
         try:
             row = self._find_row_by_email(email)
@@ -117,7 +116,7 @@ class Sheets:
             st.error(f"Error al eliminar el registro: {str(e)}")
             return False
 
-    @st.cache_data(ttl=3600)
+    @st.cache_data(ttl=900,show_spinner=False)
     def read(self, email: str = None) -> List[Dict[str, Any]]:
         try:
             if email:

@@ -71,7 +71,7 @@ try:
 
 
 
-    @st.cache_data
+    @st.cache_data(ttl=900,show_spinner=False)
     def template_file():
         file_path = './gallery/template.xlsx'
         with open(file_path, 'rb') as file:

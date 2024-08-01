@@ -138,16 +138,42 @@ class Email:
             max_retries=max_retries, 
             retry_delay=retry_delay
         )
+    
 
     def send_custom_email(self, recipient: str, user_name: str, subject: str, content: str, max_retries=3, retry_delay=5):
+        
         plain = content
-        html = f"""
-                <html>
-                    <div style="border-radius: 15px; overflow: hidden;">
-                        <img src="{header}" alt="Header" style="width: 100%; height: auto;">
-                    </div>
-                    <body>{content}</body>
-                </html>
+        html = f""" <html>
+                    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #2c3e50; margin: 0; padding: 0;">
+                        <table cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width: 800px; margin: 0 auto;">
+                            <tr>
+                                <td style="padding: 20px;">
+                                    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-radius: 10px; overflow: hidden;">
+                                        <tr>
+                                            <td style="line-height: 0;">
+                                                <img src="{header}" alt="Header" style="width: 100%; height: auto; display: block; border-radius: 10px;">
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <div style="padding: 20px;">
+                                        {content}
+                                    </div>
+                                    
+                                    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #400073; border-radius: 10px;">
+                                        <tr>
+                                            <td align="center" style="padding: 15px;">
+                                                <a href="https://www.linkedin.com/company/circleup-community/" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin: 0 10px; text-decoration: none; color: white; font-weight: bold;">LinkedIn</a>
+                                                <a href="https://wa.me/573046714626?text=Hola%20Circle%20Up%20Community" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin: 0 10px; text-decoration: none; color: white; font-weight: bold;">WhatsApp</a>
+                                                <a href="https://calendly.com/wearecircleup/15min" target="_blank" rel="noopener noreferrer" style="display: inline-block; margin: 0 10px; text-decoration: none; color: white; font-weight: bold;">Calendly</a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </body>
+                    </html>
                 """
 
         message = EmailSender.create_message(self.sender, recipient, subject, plain, html, self.bcc)

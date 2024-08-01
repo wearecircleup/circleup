@@ -2,13 +2,9 @@ import streamlit as st
 from menu import menu
 import pandas as pd
 import json
-from utils.body import warning_empty_data,succeed_proposal, warning_reupload,html_banner
-from utils.form_options import age_range,topics_of_interest, places, cities,modality,agreement_options,duration_options,consent_items
+from utils.form_options import age_range,topics_of_interest, places, cities,modality,duration_options,consent_items
 
 from google.cloud import firestore
-from google.cloud.firestore_v1 import FieldFilter, Or
-from dataclasses import dataclass, asdict
-from classes.course_class import Course
 from classes.utils_class import CategoryUtils
 from classes.spread_class import Sheets
 from classes.firestore_class import Firestore
@@ -127,7 +123,7 @@ def prepare_collection(instance_data):
         'notification':'Pending'
     }
 
-@st.cache_data(ttl=3600,show_spinner=False)
+@st.cache_data(ttl=900,show_spinner=False)
 def sheets_agreement(data: List[List[str]]):
     try:
         sheet = Sheets('1c_Pjefz-dtpBI2Yq6iPvPnSC5IkkWh7eCmdWaG39tzw','Agreement Letter')
@@ -137,7 +133,7 @@ def sheets_agreement(data: List[List[str]]):
         st.error(f"Lo siento, ha ocurrido un error al enviar los datos: {str(e)}")
         return False
 
-@st.cache_data(ttl=3600,show_spinner=False)
+@st.cache_data(ttl=900,show_spinner=False)
 def sheets_proposal(data: List[List[str]]):
     try:
         sheet = Sheets('1c_Pjefz-dtpBI2Yq6iPvPnSC5IkkWh7eCmdWaG39tzw','Proposals')

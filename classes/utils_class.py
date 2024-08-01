@@ -26,6 +26,24 @@ class CategoryUtils:
         return "No encontrado"
 
     @staticmethod
+    def parental_review(birth_date_str: str) -> str:
+        try:
+            birth_date = datetime.strptime(birth_date_str, "%d-%m-%Y")
+        except ValueError:
+            return "Formato inválido"
+
+        today = datetime.now()
+        age = today.year - birth_date.year
+
+        if today.month < birth_date.month or (today.month == birth_date.month and today.day < birth_date.day):
+            age -= 1
+            
+        if age <= 17:
+            return "Pending"
+        else:
+            return "Not Applicable"
+
+    @staticmethod
     def age_to_category(birth_date_str: str) -> str:
         try:
             birth_date = datetime.strptime(birth_date_str, "%d-%m-%Y")
@@ -81,7 +99,7 @@ class CategoryUtils:
             figure, figcaption, footer, header, hgroup, 
             menu, nav, output, ruby, section, summary,
             time, mark, audio, video {
-                font-size: 0.95rem;
+                font-size: 1.1rem;
             }
 
             /* Encabezados */
@@ -89,30 +107,19 @@ class CategoryUtils:
             h4 { font-size: 1.55rem; }
             h5, h6 { font-size: 1.35rem; }
 
-            /* Elementos de formulario de Streamlit */
-            .stTextInput input, .stTextArea textarea, .stSelectbox select,
-            .stMultiSelect input, .stNumberInput input {
-                font-size: 0.95rem !important;
-            }
-
-            /* Botones y elementos interactivos */
-            button, .stButton > button, .stDownloadButton > button {
-                font-size: 0.95rem !important;
-            }
-
             /* Elementos de texto específicos */
             .stAlert, .stInfo, .stSuccess, .stWarning, .stError {
-                font-size: 0.95rem;
+                font-size: 1.1rem;
             }
 
             /* Elementos de lista y tabla */
             li, td, th {
-                font-size: 0.95rem;
+                font-size: 1.1rem;
             }
 
             /* Ajustes para elementos de código */
             code, pre {
-                font-size: 0.9rem;
+                font-size: 1.1rem;
             }
 
             /* Ajustes para elementos de métrica */
@@ -120,7 +127,7 @@ class CategoryUtils:
                 font-size: 1.55rem !important;
             }
             .stMetricLabel {
-                font-size: 0.95rem !important;
+                font-size: 1.1rem !important;
             }
         </style>
         """

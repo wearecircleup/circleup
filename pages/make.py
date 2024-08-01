@@ -2,22 +2,17 @@ import streamlit as st
 from menu import menu
 from utils.body import html_banner
 from google.cloud import firestore
-from classes.firestore_class import Firestore
 from classes.spread_class import Sheets
 from classes.utils_class import CategoryUtils
+from classes.firestore_class import Firestore
+from classes.users_class import Users
 from utils.form_options import careers, volunteer_level, skills, roles_jerarquicos
 from classes.anthropic_agent import brainstorming, generate_presentation
 import anthropic
 import json
 from typing import List
-import pandas as pd
 import re
-import gspread
-from google.oauth2.credentials import Credentials
-from google.oauth2 import service_account
-
-from datetime import datetime
-
+import pandas as pd
 
 st.set_page_config(
     page_title="Circle Up",
@@ -41,6 +36,8 @@ if 'button_disabled' not in st.session_state:
     st.session_state.button_disabled = False
 if 'presentation_generated' not in st.session_state:
     st.session_state.presentation_generated = False
+if 'data_volunteer' not in st.session_state:
+    st.session_state.data_volunteer = {}
 
 @st.cache_resource
 def firestore_client():
@@ -54,13 +51,13 @@ def anthropic_client():
     client = anthropic.Anthropic(api_key=key_claude)
     return client
 
-@st.cache_data(show_spinner=False)
+@st.cache_data(ttl=900,show_spinner=False)
 def data_anthropic(profile):
     if profile is not None:    
         claude_review = brainstorming(profile, anthropic_client())
         return claude_review.content.replace('```','')
 
-@st.cache_data(ttl=1800) 
+@st.cache_data(ttl=900,show_spinner=False) 
 def get_profile_summary(form_data):
     profile_summary = f"""
     Profesional en el área de {form_data['career']}, específicamente con una carrera en {form_data['specific_career']}. 
@@ -82,7 +79,7 @@ def get_profile_summary(form_data):
 
     return profile_summary
 
-@st.cache_data(ttl=3600,show_spinner=False)
+@st.cache_data(ttl=900,show_spinner=False)
 def send_to_sheets(data: List[List[str]]):
     try:
         sheet = Sheets('1FzqJ-hUvIOyALFS7lXyufIF5XfcfNe6Xdvf_WdhFDw8','Anthropic')
@@ -91,9 +88,40 @@ def send_to_sheets(data: List[List[str]]):
     except Exception as e:
         st.error(f"Lo siento, ha ocurrido un error al enviar los datos: {str(e)}")
         return False
+
+@st.cache_resource
+def connector():
+    key_firestore = json.loads(st.secrets["textkey"])
+    db = firestore.Client.from_service_account_info(key_firestore)
+    Conn = Firestore(db)
+    return Conn
+
+@st.cache_data(ttl=900, show_spinner=False)
+def get_volunteer_id():
+    try:
+        Conn = connector()
+        volunteer_requests = Conn.query_collection('volunteer_request', [('status', '==', 'Approved')])
+        volunteer_data = [doc.data for doc in volunteer_requests]
+        dataset = pd.DataFrame(volunteer_data)
+        cloud_volunteer = list(dataset['cloud_id_user'].values)
+        email_volunteer = list(dataset['email'].values)
+        volunteers = dict(zip(email_volunteer,cloud_volunteer))
+        return volunteers
+    
+    except Exception as e:
+        return {'':''}
+    
+@st.cache_data(ttl=900, show_spinner=False)
+def get_volunteer_data(cloud_id_user):
+    try:
+        Conn = connector()
+        volunteer_info = Conn.get_document('users_collection',cloud_id_user)
+        return volunteer_info.data
+    except Exception as e:
+        return {}
     
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=900,show_spinner=False)
 def structured_presentation(topic: str, _client):
     user_data = get_user_data()
     table_data = generate_presentation(topic, user_data, client)
@@ -126,29 +154,31 @@ def get_user_data():
     """
     Obtiene los datos de usuario de Streamlit session state.
     """
+    
+    volunteer_info = Users(**st.session_state.data_volunteer)
+
     utils = CategoryUtils()
     return {
         "date":utils.get_current_date(),
         "week":utils.date_to_day_of_week(),
         "hour_range":utils.time_to_category(),
-        "first_name": st.session_state.user_auth.first_name,
-        "last_name": st.session_state.user_auth.last_name,
-        "email": st.session_state.user_auth.email,
-        "user_role": st.session_state.user_auth.user_role,
-        "phone_number": st.session_state.user_auth.phone_number,
-        "dob": utils.age_to_category(st.session_state.user_auth.dob),
+        "first_name": volunteer_info.first_name,
+        "last_name": volunteer_info.last_name,
+        "email": volunteer_info.email,
+        "user_role": volunteer_info.user_role,
+        "phone_number": volunteer_info.phone_number,
+        "dob": utils.age_to_category(volunteer_info.dob),
         "career": st.session_state.career,
         "specific_career": st.session_state.specific_career,
         "current_job": st.session_state.current_job,
         "education_level": st.session_state.education_level,
         "current_role": st.session_state.current_role,
         "years_experience": st.session_state.years_experience,
-        "cloud_id": st.session_state.user_auth.cloud_id,
-        "gender": st.session_state.user_auth.gender,
+        "cloud_id": volunteer_info.cloud_id,
+        "gender": volunteer_info.gender,
         "profile": st.session_state.profile_summary,
         "brainstorming": st.session_state.markdown_output,
         "idea": st.session_state.idea,
-
     }
 
 st.title("Circle Up - Creación de Propuestas Educativas")
@@ -161,6 +191,12 @@ st.write("Aquí empieza el brainstorming. En este formulario, vamos a responder 
 
 
 with st.form("volunteer_profile"):
+    
+    volunteers = get_volunteer_id()
+    volunteer_emails = volunteers.keys()
+    
+    volunteer_mail = st.selectbox("¿Cuál es tu email?", volunteer_emails, index=None, key="volunteer_mail")        
+
     career = st.selectbox("¿Cuál es tu área profesional?", careers, index=None, key="career")
     specific_career = st.text_input("¿Cuál es el nombre exacto de la carrera que estudiaste?", key="specific_career")
     
@@ -206,6 +242,7 @@ with st.form("volunteer_profile"):
 
 if submit_button and not st.session_state.form_submitted:
     required_fields = {
+        "Email Volunteer": volunteer_mail,
         "Área profesional": career,
         "Carrera específica": specific_career,
         "Trabajo actual": current_job,
@@ -226,6 +263,7 @@ if submit_button and not st.session_state.form_submitted:
             st.session_state.button_disabled = True
             
             form_data = {
+                "volunteer_mail": volunteer_mail,
                 "career": career,
                 "specific_career": specific_career,
                 "current_job": current_job,
@@ -267,6 +305,13 @@ if st.session_state.form_submitted and st.session_state.markdown_output is not N
     if st.button("Generar Presentación", use_container_width=True, type='primary', disabled=st.session_state.presentation_generated) and topic:
         with st.spinner("Generando presentación..."):
             client = anthropic_client()
+            
+            volunteers = get_volunteer_id()
+            st.session_state.data_volunteer = get_volunteer_data(volunteers[st.session_state.volunteer_mail])
+
+            if volunteer_mail:
+                data = get_volunteer_data(volunteers[volunteer_mail])
+
             table_data = structured_presentation(st.session_state.idea, client)
             st.session_state.table_data = table_data
             st.session_state.presentation_generated = True
@@ -277,8 +322,6 @@ if st.session_state.form_submitted and st.session_state.markdown_output is not N
         st.info('Por favor, ingresa el tema de la presentación. Verifica antes de enviar.', icon=":material/edit_note:")
 
     if st.session_state.presentation_generated:
-        # st.table(st.session_state.table_data)
-        # st.write([values for table in st.session_state.table_data for key, values in table.items() if key =='name'])
         st.success("Presentación generada. Preparando envío a Google Sheets.", icon=":material/cloud_upload:")
         if st.button("Enviar Google Sheets", use_container_width=True):
             with st.spinner("Enviando datos a Google Sheets..."):

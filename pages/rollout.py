@@ -8,7 +8,7 @@ from classes.email_class import Email
 from classes.spread_class import Sheets
 from classes.utils_class import CategoryUtils
 from classes.blobs_class import GoogleBlobs
-from google.cloud.firestore_v1.base_query import FieldFilter
+import time
 
 st.set_page_config(
     page_title="Circle Up",
@@ -33,7 +33,7 @@ def connector():
     return Conn
 
 
-@st.cache_data(ttl=3600)
+@st.cache_data(ttl=900,show_spinner=False)
 def cached_upload_file(google_blobs, file):
     try:
         file_link = google_blobs.upload_file(file)
@@ -97,13 +97,14 @@ def manage_volunteer_requests(connector: Firestore):
 
             st.info(f"**Conocimientos Básicos** {selected_request.data.get('prior_knowledge')}", icon=":material/school:")
             
-            google_blobs = GoogleBlobs('1b62BYUeYAqh6u7UNDboCDlhswcdWgteR')
-            uploaded_file = st.file_uploader("Documento Firmado Drive", type=['docx', 'pdf'])
+            google_blobs = GoogleBlobs('1xRglgLMUhscS_hh90_kJ00lwRIv_a5pk')
+            uploaded_file = st.file_uploader("Documento Firmado Drive", type=['pdf'])
 
             if uploaded_file is not None:
                 if st.button("Subir a Google Drive"):
                     with st.spinner("Subiendo archivo..."):
                         st.session_state.sign_document = cached_upload_file(google_blobs, uploaded_file)
+                        time.sleep(5)
                         if st.session_state.sign_document:
                             st.success(f"Archivo cargado exitosamente.", icon=":material/check_circle:")
                         else:
