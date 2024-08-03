@@ -70,8 +70,8 @@ def form_reponses():
         'city_residence':st.session_state._city_residence, 
         'guardian_fullname':st.session_state._guardian_fullname,
         'guardian_relationship':st.session_state._guardian_relationship,
-        'guardian_id':st.session_state._guardian_id,
-        'guardian_id_type':st.session_state._guardian_id_type,
+        'guardian_id':'Pending',
+        'guardian_id_type':'Pending',
         'emergency_phone':st.session_state._emergency_phone,
         'education_level':st.session_state._education_level,
         'data_sharing':st.session_state._data_sharing,
@@ -255,7 +255,7 @@ def register_users():
     st.selectbox(label="Nacionalidad",options=["Colombia","Otro país"],index=None,key="_nationality",help=st.session_state.form_definitions['_nationality'])
     st.selectbox(label="Tipo D.I.",index=1,options=st.session_state.id_user_list, key="_id_user_type",help=st.session_state.form_definitions['_id_user_type']) 
     st.text_input(label="Número Documento Identidad",placeholder="80000000",key="_id_user",help=st.session_state.form_definitions['_id_user'])
-    st.selectbox(label="Nivel Educación",index=0,options=st.session_state.education_level,key="_education_level",help=st.session_state.form_definitions['_education_level'])
+    st.selectbox(label="Nivel Educación",index=None,options=st.session_state.education_level,key="_education_level",help=st.session_state.form_definitions['_education_level'])
     st.multiselect(label="Temas Interes",options=st.session_state.topics_of_interest,placeholder="Choose an option",key="_topics_interest",help=st.session_state.form_definitions['_topics_interest'])
     st.multiselect(label="Discapacidad (PCD)",options=st.session_state.disabilities,placeholder="Choose an option",default='No Aplica',key="_disability",help=st.session_state.form_definitions['_disability'])
     st.multiselect(label="Selecciona tus habilidades", options=st.session_state.skills, placeholder="Choose an option", key="_skills",help=st.session_state.form_definitions['_skills'])
@@ -266,10 +266,10 @@ def register_users():
     st.selectbox(label="¿Cual Etnia?",index=3,options=st.session_state.ethnics,key="_ethnic_affiliation",help=st.session_state.form_definitions['_ethnic_affiliation']) 
     st.selectbox(label="Cuidad Residencia",options=municipios,index=None,key="_city_residence",help=st.session_state.form_definitions['_city_residence'])
     st.text_input(label="Nombre Contacto Emergencia/Tutor Legal",placeholder="Letizia Ramolino",key="_guardian_fullname",help=st.session_state.form_definitions['_guardian_fullname'])
-    st.text_input(label="Parentesco",placeholder="Madre",key="_guardian_relationship",help=st.session_state.form_definitions['_guardian_relationship'])
     st.text_input(label="Telefono Emergencia/Tutor",placeholder="555-888-4444",key="_emergency_phone",help=st.session_state.form_definitions['_emergency_phone'])
-    st.selectbox(label="Tipo D.I. Tutor",index=1,options=st.session_state.id_user_list,key="_guardian_id_type",help=st.session_state.form_definitions['_guardian_id_type'])
-    st.text_input(label="D.I. Tutor Legal",placeholder="5000000",key="_guardian_id",help=st.session_state.form_definitions['_guardian_id'])
+    st.text_input(label="Parentesco",placeholder="Madre",key="_guardian_relationship",help=st.session_state.form_definitions['_guardian_relationship'])
+    # st.selectbox(label="Tipo D.I. Tutor",index=1,options=st.session_state.id_user_list,key="_guardian_id_type",help=st.session_state.form_definitions['_guardian_id_type'])
+    # st.text_input(label="D.I. Tutor Legal",placeholder="5000000",key="_guardian_id",help=st.session_state.form_definitions['_guardian_id'])
     st.checkbox(label=disclaimer_data_agreemet, key="_data_sharing")
 
 
