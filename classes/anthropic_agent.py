@@ -19,12 +19,12 @@ def brainstorming(profile: str, client) -> str:
     </Perfil>
     
     <Para cada propuesta, incluye>
-    1. Título conciso y atractivo. Formato: #### Titulo Academico Corto | Titulo Marketing Corto
+    1. Título conciso y atractivo. Formato: #### Titulo Interesante Pensado a Marketing (Corto)
 
-    2. Párrafo descriptivo y argumentativo que (MAXIMO 70 TOKENS):
+    2. Párrafo descriptivo y argumentativo que (MAXIMO 55 Palabras):
     - Detalle el contenido específico del curso (ej. Python: estructuras de datos, listas, tuplas).
     - Explique los beneficios tangibles para los participantes.
-    - Demuestre la relevancia y aplicación práctica en contextos comunitarios con recursos limitados.
+    - Demuestre la relevancia y aplicación práctica en contextos comunitarios en paises en desarrollo en america latina.
     - Enfatice el desarrollo de habilidades blandas sobre el impacto académico.
     - Proporcione instrucciones claras sobre cómo se debe construir y desarrollar el curso.
 
@@ -34,9 +34,9 @@ def brainstorming(profile: str, client) -> str:
     
     <Consideraciones Importantes>
     - Las propuestas deben estar ligadas directamete a la expericiencia laboral y luego academica del perfil.
-    - El curso tendra una duracion maxima de 4 horas.
+    - El curso tendra una duracion maxima de 2 horas.
     - Utiliza un lenguaje neutro y académico.
-    - Enfócate en propuestas particularmente relevantes para contextos de recursos limitados y desafíos socioeconómicos.
+    - Enfócate en propuestas particularmente relevantes para contextos de paises en desarrollo en america latina y desafíos socioeconómicos.
     - Los cursos están dirigidos a individuos, no a empresas.
     - Prioriza métodos catedráticos y recursos de acceso libre debido a las limitaciones presupuestarias.
     - Concentra el contenido en desarrollar habilidades prácticas y blandas sobre conocimientos puramente académicos.
@@ -53,31 +53,31 @@ def brainstorming(profile: str, client) -> str:
 def create_community_academic_presentation_schemas() -> List[ResponseSchema]:
     schemas = [
         ResponseSchema(name="context", description="Breve descripción del tema (40 palabras). Incluir área de estudio y relevancia para la comunidad."),
-        ResponseSchema(name="slide1_title", description="Título conciso y atractivo para la presentación."),
-        ResponseSchema(name="slide1_objective", description="Objetivo principal de la sesión (1 oración)."),
+        ResponseSchema(name="slide1_title", description="Título conciso, atractivo en el contexto (america latina, Colombia) para la presentación."),
+        ResponseSchema(name="slide1_objective", description="Objetivo principal de la sesión (1 oración 50 palabras)."),
         ResponseSchema(name="slide2_icebreaker_title", description="Título de la actividad dinámica inicial."),
-        ResponseSchema(name="slide2_icebreaker_instructions", description="Instrucciones breves para una actividad dinámica, divertida, participativa, sin materiales (máximo 60 palabras)."),
-        ResponseSchema(name="slide2_icebreaker_purpose", description="Propósito de la actividad en relación con el tema (1 oración)."),
-        ResponseSchema(name="slide3_rhetorical_question", description="Pregunta retórica para estimular la participación y reflexión."),
+        ResponseSchema(name="slide2_icebreaker_instructions", description="Instrucciones breves para actividad dinámica, divertida, participativa, reflexiva, agradable, sin materiales (máximo 65 palabras)."),
+        ResponseSchema(name="slide2_icebreaker_purpose", description="Propósito de la actividad en relación con el tema (1 oración 20 palabras)."),
+        ResponseSchema(name="slide3_rhetorical_question", description="Pregunta retórica para estimular la participación y reflexión. (contexto latino americano, Colombia)"),
         ResponseSchema(name="slide4_concept1_title", description="Título del primer concepto fundamental."),
-        ResponseSchema(name="slide4_concept1_definition", description="Definición del primer concepto (máximo 20 palabras)."),
+        ResponseSchema(name="slide4_concept1_definition", description="Definición del primer concepto (máximo 30 palabras)."),
         ResponseSchema(name="slide5_concept2_title", description="Título del segundo concepto fundamental."),
-        ResponseSchema(name="slide5_concept2_definition", description="Definición del segundo concepto (máximo 20 palabras)."),
+        ResponseSchema(name="slide5_concept2_definition", description="Definición del segundo concepto (máximo 30 palabras)."),
         ResponseSchema(name="slide6_concept3_title", description="Título del tercer concepto fundamental."),
-        ResponseSchema(name="slide6_concept3_definition", description="Definición del tercer concepto (máximo 20 palabras)."),
+        ResponseSchema(name="slide6_concept3_definition", description="Definición del tercer concepto (máximo 30 palabras)."),
         ResponseSchema(name="slide7_real_world_application_title", description="Título de la sección de aplicación en el mundo real."),
-        ResponseSchema(name="slide7_real_world_application_points", description="3-4 puntos numerados sobre cómo se aplica el tema en situaciones reales."),
+        ResponseSchema(name="slide7_real_world_application_points", description="3-4 puntos numerados sobre cómo se aplica el tema en situaciones reales, contexto latino americano, Colombia."),
         ResponseSchema(name="slide8_leadership_insights_title", description="Título de la sección de insights de liderazgo."),
-        ResponseSchema(name="slide8_leadership_insights_points", description="3-4 puntos numerados sobre liderazgo relacionados con el tema."),
+        ResponseSchema(name="slide8_leadership_insights_points", description="3-4 puntos numerados sobre liderazgo relacionados con el tema, contexto latino americano, Colombia."),
         ResponseSchema(name="slide9_critical_thinking_title", description="Título de la sección de pensamiento crítico."),
-        ResponseSchema(name="slide9_critical_thinking_points", description="3-4 puntos numerados que fomenten el pensamiento crítico sobre el tema."),
+        ResponseSchema(name="slide9_critical_thinking_points", description="3-4 puntos numerados que fomenten el pensamiento crítico sobre el tema, contexto latino americano, Colombia."),
         ResponseSchema(name="slide10_problem_solving_title", description="Título de la sección de resolución de problemas."),
-        ResponseSchema(name="slide10_problem_solving_points", description="3-4 estrategias numeradas de resolución de problemas aplicadas al tema."),
+        ResponseSchema(name="slide10_problem_solving_points", description="3-4 estrategias numeradas de resolución de problemas aplicadas al tema, contexto latino americano, Colombia."),
         ResponseSchema(name="slide11_community_impact_title", description="Título de la sección de impacto comunitario."),
-        ResponseSchema(name="slide11_community_impact_points", description="3-4 puntos numerados sobre cómo el tema puede impactar positivamente en la comunidad."),
-        ResponseSchema(name="slide12_open_discussion_questions", description="3 preguntas abiertas para fomentar la discusión grupal."),
+        ResponseSchema(name="slide11_community_impact_points", description="3-4 puntos numerados sobre cómo el tema puede impactar positivamente en la comunidad, contexto latino americano, Colombia."),
+        ResponseSchema(name="slide12_open_discussion_questions", description="3 preguntas abiertas para fomentar la discusión grupal, contexto latino americano, Colombia."),
         ResponseSchema(name="open_source_resources", description="Lista de 3-4 recursos de código abierto o open source relevantes para explorar más el tema, colocar nombre recurso: definicion practica"),
-        ResponseSchema(name="verified_references", description="Lista de 3-5 referencias bibliográficas de investigaciones o articulos cientificos en formato APA. Incluir solo si hay alta confianza en su exactitud.")
+        ResponseSchema(name="verified_references", description="Lista de 3-5 referencias bibliográficas de investigaciones o articulos cientificos en formato APA. Incluir solo si hay alta confianza en su exactitud, contexto latino americano, Colombia.")
     ]
     return schemas
 
@@ -98,8 +98,8 @@ def generate_community_academic_presentation_content(context: str, client) -> Di
         - Incluya elementos interactivos y reflexivos.
         - Enfóquese en aplicaciones prácticas, liderazgo y pensamiento crítico.
         - Considere el uso de recursos de código abierto unicamente.
+        - Considere pero no limite a contexto latino americano (Colombia).
         - La presentación es dirigida por un voluntario que comparte conocimiento con su comunidad.
-        - Preferible pero no limitado a Colombia y América Latina.
         """
     )
 

@@ -13,6 +13,7 @@ import json
 from typing import List
 import re
 import pandas as pd
+import time
 
 st.set_page_config(
     page_title="Circle Up",
@@ -238,7 +239,7 @@ with st.form("volunteer_profile"):
     field_update = st.selectbox("¿Qué tan actualizado estás en los últimos avances de tu campo profesional?", options=scale_list, key="field_update")
     teaching_adaptation = st.selectbox("¿Qué tan cómodo te sientes adaptando tu estilo de enseñanza a diferentes tipos de estudiantes?", options=scale_list, key="teaching_adaptation")
 
-    submit_button = st.form_submit_button("Enviar perfil", type='primary', use_container_width=True, disabled=st.session_state.button_disabled)
+    submit_button = st.form_submit_button("Enviar perfil", type='primary', use_container_width=True, disabled=True)
 
 if submit_button and not st.session_state.form_submitted:
     required_fields = {
@@ -260,7 +261,7 @@ if submit_button and not st.session_state.form_submitted:
     else:
         with st.spinner("Procesando tu perfil..."):
             st.session_state.form_submitted = True
-            st.session_state.button_disabled = True
+            # st.session_state.button_disabled = True
             
             form_data = {
                 "volunteer_mail": volunteer_mail,
@@ -282,10 +283,12 @@ if submit_button and not st.session_state.form_submitted:
                 "field_update": field_update
             }
             
-            client = anthropic_client()
-            st.session_state.profile_summary = get_profile_summary(form_data)
-            st.session_state.markdown_output = data_anthropic(st.session_state.profile_summary)
-        
+            with st.spinner(':material/online_prediction: Generando ideas únicas para tu perfil...'):
+                client = anthropic_client()
+                st.session_state.profile_summary = get_profile_summary(form_data)
+                st.session_state.markdown_output = data_anthropic(st.session_state.profile_summary)
+                time.sleep(5)
+            
         st.success("¡Perfil enviado con éxito!", icon=":material/check_circle:")
         st.rerun()
 
@@ -295,47 +298,53 @@ if st.session_state.form_submitted and st.session_state.markdown_output is not N
     
     idea1, idea2 = format_markdown_output(st.session_state.markdown_output)
     st.info(idea1, icon=":material/lightbulb:")
-    st.success(idea2, icon=":material/star:")
+    st.success(idea2, icon=":material/rocket:")
 
-    st.title("Selección de Propuesta")
-    st.write("Ahora que ya tenemos un tema para presentarle a la comunidad, vamos a trabajar en el material de apoyo. Este material debe ser lo más estructurado posible y manejar un estándar para que todas las presentaciones de CircleUp tengan una identidad propia. En este punto, le entregaremos a Claude Sonnet 3.5 la idea para posteriormente evaluar el contenido.")
-    st.title("Generador de Presentaciones Comunitarias")
-    topic = st.text_area("Ingrese el tema de la presentación", key='idea')
-
-    if st.button("Generar Presentación", use_container_width=True, type='primary', disabled=st.session_state.presentation_generated) and topic:
-        with st.spinner("Generando presentación..."):
-            client = anthropic_client()
-            
-            volunteers = get_volunteer_id()
-            st.session_state.data_volunteer = get_volunteer_data(volunteers[st.session_state.volunteer_mail])
-
-            if volunteer_mail:
-                data = get_volunteer_data(volunteers[volunteer_mail])
-
-            table_data = structured_presentation(st.session_state.idea, client)
-            st.session_state.table_data = table_data
-            st.session_state.presentation_generated = True
+    st.title(":material/bolt: Ideas a Diapositivas Sonnet 3.5")
+    st.write("""
+    Ahora que tenemos un tema para presentar a la comunidad, vamos a trabajar en el material de apoyo. 
+    Este material será estructurado y seguirá un estándar para que todas las presentaciones de CircleUp tengan una identidad propia. 
+    Claude 3.5 Sonnet evaluará el contenido basado en la idea proporcionada.
+    """)
+    with st.form(key='presentation_form',clear_on_submit=False):
         
-        st.success("¡Presentación generada con éxito!", icon=":material/task_alt:")
-        st.rerun()
-    else:
-        st.info('Por favor, ingresa el tema de la presentación. Verifica antes de enviar.', icon=":material/edit_note:")
+        topic = st.text_area("Ingrese el tema de la presentación", key='idea')
+        
+        submit_button = st.form_submit_button(
+            "Generar Presentación", 
+            use_container_width=True, 
+            type='primary', 
+            disabled=True
+        )
 
-    if st.session_state.presentation_generated:
-        st.success("Presentación generada. Preparando envío a Google Sheets.", icon=":material/cloud_upload:")
-        if st.button("Enviar Google Sheets", use_container_width=True):
-            with st.spinner("Enviando datos a Google Sheets..."):
-                sheet_data = [[row['description'] for row in st.session_state.table_data]]
-                success = send_to_sheets(sheet_data)
+    if submit_button and topic:
+        with st.spinner(":material/self_improvement: Creando tu presentación única..."):
+            client = anthropic_client()
+            volunteers = get_volunteer_id()
+            time.sleep(1)
+            st.session_state.data_volunteer = get_volunteer_data(volunteers[st.session_state.volunteer_mail])
+            time.sleep(2)
+            table_data = structured_presentation(st.session_state.idea, client)
+            time.sleep(3)
+            st.session_state.table_data = table_data
+            # st.session_state.presentation_generated = True
+        
+        with st.spinner(":material/self_improvement: Dando vida a tu presentación... ~1 min y listo."):
             
-            if success:
-                st.success("¡Los datos de la presentación han sido enviados correctamente a Google Sheets!", icon=":material/cloud_done:")
-            else:
-                st.error("Hubo un problema al enviar los datos a Google Sheets. Por favor, inténtalo de nuevo más tarde.", icon=":material/error:")
+            st.info(":blue-background[Recordatorio] Para participar como voluntario en :blue[**Circle Up Community**], necesitarás proporcionar un PDF con tu cédula y el acuerdo de voluntario firmado. Te informaremos sobre esto en detalle más adelante.")
+            
+            
+            sheet_data = [[row['description'] for row in st.session_state.table_data]]
+            success = send_to_sheets(sheet_data)
+            time.sleep(60)
+
+        st.success("¡Tu presentación está lista! Revisa tu correo para ver el resultado de nuestra colaboración.", icon=":material/document_scanner:")
+    elif submit_button:
+        st.warning('Por favor, ingresa el tema de la presentación antes de generar.', icon=":material/edit_note:")
+        
 
 if not st.session_state.form_submitted:
     st.info("Por favor, completa el formulario y haz clic en **Enviar perfil** para ver los resultados.", icon=":material/info:")
-
 
 st.divider()
 if st.button(':material/hiking: Volver al Inicio', type="secondary", help='Volver al menú principal', use_container_width=True):

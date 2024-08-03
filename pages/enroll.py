@@ -169,7 +169,6 @@ def update_sheets(cloud_id):
         sheet.replace_values(cloud_id, updates)
         return True
     except Exception as e:
-        
         return False
 
 def update_firebase(cloud_id):

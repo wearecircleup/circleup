@@ -1,18 +1,14 @@
-import datetime as dt
 from datetime import datetime
+import time
 import json
 import streamlit as st
 from google.cloud import firestore
 from menu import menu
-from google.cloud import firestore
 from classes.users_class import Users
 from classes.firestore_class import Firestore
 from classes.spread_class import Sheets   
 from classes.utils_class import CategoryUtils
-from typing import List
-import gspread
-from google.oauth2.credentials import Credentials
-from google.oauth2 import service_account
+from typing import List, Dict, Optional
 from dataclasses import asdict
 from utils.form_options import (disabilities,ethnics,skills,
                                 how_to_learn,weaknesses,strengths,
@@ -22,6 +18,19 @@ from utils.form_options import (disabilities,ethnics,skills,
 from utils.form_instructions import form_definitions
 from utils.body import html_banner
 
+def user_to_json(user: Users) -> str:
+    return json.dumps(asdict(user))
+
+# Función para deserializar JSON a Users
+def json_to_user(json_str: str) -> Users:
+    return Users(**json.loads(json_str))
+
+# Función para cargar usuario desde st.session_state
+def load_user_from_session() -> Optional[Users]:
+    if 'user_data' in st.session_state:
+        return json_to_user(st.session_state.user_data)
+    return None
+
 st.set_page_config(
     page_title="Circle Up",
     page_icon="⚫",
@@ -29,19 +38,52 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-
+# Initialize disabilities
 if 'disabilities' not in st.session_state:
     st.session_state.disabilities = disabilities
+
+# Initialize ethnics
+if 'ethnics' not in st.session_state:
     st.session_state.ethnics = ethnics
+
+# Initialize skills
+if 'skills' not in st.session_state:
     st.session_state.skills = skills
+
+# Initialize how to learn
+if 'how_to_learn' not in st.session_state:
     st.session_state.how_to_learn = how_to_learn
+
+# Initialize weaknesses
+if 'weaknesses' not in st.session_state:
     st.session_state.weaknesses = weaknesses
+
+# Initialize strengths
+if 'strengths' not in st.session_state:
     st.session_state.strengths = strengths
+
+# Initialize volunteer keywords
+if 'volunteer_keywords' not in st.session_state:
     st.session_state.volunteer_keywords = volunteer_keywords
+
+# Initialize gender list
+if 'gender' not in st.session_state:
     st.session_state.gender = gender_list
+
+# Initialize form definitions
+if 'form_definitions' not in st.session_state:
     st.session_state.form_definitions = form_definitions
+
+# Initialize id user list
+if 'id_user_list' not in st.session_state:
     st.session_state.id_user_list = id_user_list
+
+# Initialize topics of interest
+if 'topics_of_interest' not in st.session_state:
     st.session_state.topics_of_interest = topics_of_interest
+
+# Initialize education level
+if 'education_level' not in st.session_state:
     st.session_state.education_level = education_level
 
 if "_email_entered" not in st.session_state:
@@ -67,7 +109,7 @@ if '_is_ethnic' not in st.session_state:
 
 # Initialize st.session_state.auth to Log In | Circle Up
 if "user_auth" not in st.session_state:
-    st.session_state.user_auth = None
+    st.session_state.user_auth = load_user_from_session()
 
 if 'page_selected' not in st.session_state:
     st.session_state.page_selected = None
@@ -94,16 +136,17 @@ def show_navigation():
         pages["Ser Voluntario"] = "pages/volunteering.py"
     
     if st.session_state.user_auth.user_role in ['Volunteer', 'Admin']:
-        pages["Proponer Curso"] = "pages/proposal.py"
-    
+        pages["Propuestas"] = "pages/dashboard.py"
+
     if st.session_state.user_auth.user_role == 'Admin':
+        pages["Proponer Curso"] = "pages/proposal.py"
         pages["Crear Ideas"] = "pages/make.py"
         pages["Gestión Voluntarios"] = "pages/orchestrate.py"
         pages["Revisar Cursos"] = "pages/rollout.py"
 
     return pages
 
-def prepare_sheets_data(instance_data):
+def prepare_sheets_data(instance_data: dict) -> list[str]:
     """
     Prepara los datos específicos para enviar a Google Sheets.
     """
@@ -123,36 +166,39 @@ def prepare_sheets_data(instance_data):
         'login'
     ]
 
-@st.cache_data(ttl=3600,show_spinner=False)
-def send_to_sheets(data: List[List[str]]):
+@st.cache_data(ttl=900,show_spinner=False)
+def send_to_sheets(data: List[List[str]]) -> bool:
     try:
-        sheet = Sheets('1lAPcVR3e7MqUJDt2ys25eRY7ozu5HV61ZhWFYuMULOM','Log In')
+        sheet: Sheets = Sheets('1lAPcVR3e7MqUJDt2ys25eRY7ozu5HV61ZhWFYuMULOM','Log In')
         sheet.create(data)
+        return True
     except Exception as e:
         st.error(f"Lo siento, ha ocurrido un error al enviar los datos: {str(e)}")
         return False
 
-def login_setup(email, password):
+def login_setup(email: str, password: str) -> str:
     if not email or not password:
         return "incomplete_fields"
     try:
-        query_data = connector().auth_firestore(email, password)
-        instance = Users(**query_data)
-        
-        instance_data = asdict(instance)
-        sheets_data = prepare_sheets_data(instance_data)
-        send_to_sheets([sheets_data])
-    except:
-        instance = None
-    if instance:
+        with st.spinner(f'Preparando tu espacio personal...'):
+            query_data = connector().auth_firestore(email, password)
+            time.sleep(2)
+            instance = Users(**query_data)
+            instance_data = asdict(instance)
+            sheets_data = prepare_sheets_data(instance_data)
+            send_to_sheets([sheets_data])
+            time.sleep(2)
         st.session_state.user_auth = instance
+        st.session_state.user_data = user_to_json(instance)
         st.session_state.login_status = 'logged_in'
         return "success"
-    else:
+    except:
         st.session_state.user_auth = None
         return "wrong_password"
 
 st.html(html_banner)
+
+user_agent = st.context.headers.get('User-Agent', 'Desconocido')
 
 intro_message = """
 Circle Up Community ⚫ es una plataforma dedicada a la :blue-background[gestión de propuestas e ideas] para la comunidad. 
@@ -175,7 +221,7 @@ with st.container():
         st.session_state.user_auth = None
         status = login_setup(email, password)
         st.session_state.page_msm = 'success' if status == 'success' else 'fail'
-        st.rerun()
+        # st.rerun()
 
     col1, col2 = st.columns(2)
     with col1:

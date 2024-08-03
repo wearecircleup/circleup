@@ -88,7 +88,6 @@ def volunteer_admitions():
 
     if st.session_state.status_request:
         st.warning("Ya has enviado una solicitud de voluntariado. Tu solicitud está pendiente de validación. Por favor, está atento a tu email para más información.")
-        st.stop()  # Stop execution here if the user has already submitted a request
 
     st.title("¿Te interesaría participar como voluntario?")
 

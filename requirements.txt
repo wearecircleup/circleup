@@ -12,8 +12,5 @@ google-auth
 google-auth-oauthlib
 google-api-python-client
 pydantic==1.10.8
-
-# anthropic
-# langchain==0.2.6
-# langchain-anthropic
-# pydantic==1.10.8
+google-cloud-core
+firebase-admin

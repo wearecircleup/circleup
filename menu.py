@@ -30,11 +30,12 @@ def authenticated_menu():
 
         if st.session_state.user_auth.user_role in ['Volunteer','Admin']:
             st.sidebar.info(":blue[**Nomad Side**]")
-            st.sidebar.page_link("pages/proposal.py", label="Proponer Curso", icon=":material/edit_document:")
+            st.sidebar.page_link("pages/dashboard.py", label="Propuestas", icon=":material/groups:")
 
         if st.session_state.user_auth.user_role == 'Admin':
             st.sidebar.info(":blue[**Sentinel Side**]")
             st.sidebar.page_link("pages/make.py", label="Crear Ideas", icon=":material/lightbulb:")
+            st.sidebar.page_link("pages/proposal.py", label="Proponer Cursos", icon=":material/rocket:")
             st.sidebar.page_link("pages/orchestrate.py", label="Gestión Voluntarios", icon=":material/group:")
             st.sidebar.page_link("pages/rollout.py", label="Revisar Cursos", icon=":material/menu_book:")
             

@@ -8,6 +8,7 @@ from google.cloud import firestore
 from classes.utils_class import CategoryUtils
 from classes.spread_class import Sheets
 from classes.firestore_class import Firestore
+from classes.users_class import Users
 from datetime import datetime
 from typing import List
 import time
@@ -32,27 +33,52 @@ def connector():
     Conn = Firestore(db)
     return Conn
 
+@st.cache_data(ttl=900, show_spinner=False)
+def get_volunteer_id():
+    try:
+        Conn = connector()
+        volunteer_requests = Conn.query_collection('volunteer_request', [('status', '==', 'Approved')])
+        volunteer_data = [doc.data for doc in volunteer_requests]
+        dataset = pd.DataFrame(volunteer_data)
+        cloud_volunteer = list(dataset['cloud_id_user'].values)
+        email_volunteer = list(dataset['email'].values)
+        volunteers = dict(zip(email_volunteer,cloud_volunteer))
+        return volunteers
+    
+    except Exception as e:
+        return {'':''}
+    
+@st.cache_data(ttl=900, show_spinner=False)
+def get_volunteer_data(cloud_id_user):
+    try:
+        Conn = connector()
+        volunteer_info = Conn.get_document('users_collection',cloud_id_user)
+        return volunteer_info.data
+    except Exception as e:
+        return {}
+
 def prepare_data(instance_data):
     """
     Prepara los datos específicos para enviar a Google Sheets.
     """
     utils = CategoryUtils()
+    volunteer_info = Users(**st.session_state.data_volunteer)
 
     return [
         utils.get_current_date(),
         utils.date_to_day_of_week(),
         utils.time_to_category(),
-        st.session_state.user_auth.first_name,
-        st.session_state.user_auth.last_name,
-        st.session_state.user_auth.gender,
-        utils.age_to_category(st.session_state.user_auth.dob),
-        st.session_state.user_auth.email,
-        st.session_state.user_auth.id_user_type,
-        st.session_state.user_auth.id_user,
-        st.session_state.user_auth.gender,
-        st.session_state.user_auth.phone_number,
-        st.session_state.user_auth.user_role,
-        st.session_state.user_auth.city_residence,
+        volunteer_info.first_name,
+        volunteer_info.last_name,
+        volunteer_info.gender,
+        utils.age_to_category(volunteer_info.dob),
+        volunteer_info.email,
+        volunteer_info.id_user_type,
+        volunteer_info.id_user,
+        volunteer_info.gender,
+        volunteer_info.phone_number,
+        volunteer_info.user_role,
+        volunteer_info.city_residence,
         instance_data.get('check_structure_form', False),
         instance_data.get('check_development_form', False),
         instance_data.get('check_material_form', False),
@@ -94,14 +120,15 @@ def prepare_collection(instance_data):
     Prepara los datos específicos para enviar a Google Sheets.
     """
     utils = CategoryUtils()
+    volunteer_info = Users(**st.session_state.data_volunteer)
 
     return {
         'created_at':utils.get_current_date(),
-        'cloud_id_volunteer':st.session_state.user_auth.cloud_id,
-        'first_name':st.session_state.user_auth.first_name,
-        'last_name':st.session_state.user_auth.last_name,
-        'gender':st.session_state.user_auth.gender,
-        'email':st.session_state.user_auth.email,
+        'cloud_id_volunteer':volunteer_info.cloud_id,
+        'first_name':volunteer_info.first_name,
+        'last_name':volunteer_info.last_name,
+        'gender':volunteer_info.gender,
+        'email':volunteer_info.email,
         'volunteer_profile':instance_data.get('volunteer_profile_form', ''),
         'cloud_id':None,
         'course_categories':', '.join(instance_data.get('course_categories_form', [])),
@@ -153,6 +180,11 @@ def main():
     """)
 
     with st.form("curso_form"):
+
+        volunteers = get_volunteer_id()
+        volunteer_emails = volunteers.keys()
+        volunteer_mail = st.selectbox("¿Cuál es tu email?", volunteer_emails, index=None, key="volunteer_mail")       
+
         st.title("1. Confirmación de Circle Up Community")
         st.info("Circle Up Community ha revisado y está de acuerdo con los siguientes elementos", icon=":material/thumb_up:")
 
@@ -256,6 +288,9 @@ def main():
 
     if submitted:
         missing_fields = []
+
+        volunteers = get_volunteer_id()
+        st.session_state.data_volunteer = get_volunteer_data(volunteers[st.session_state.volunteer_mail])
 
         # Verificar campos de la sección 1
         if not st.session_state.check_structure_form:

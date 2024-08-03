@@ -148,10 +148,10 @@ def approve_request(connector: Firestore, cloud_id: str):
 def deny_request(connector: Firestore, cloud_id: str):
     with st.spinner("Denegando Propuesta..."):
         last_update = CategoryUtils().get_current_date()
-        connector.update_document('course_proposal', cloud_id, {'status': 'Denied','notification':'Pending', 'signed_concent': 'Disapproved','updated_at': last_update})
+        connector.update_document('course_proposal', cloud_id, {'status': 'Denied','notification':'Pending','updated_at': last_update})
         time.sleep(3)
         sheet = Sheets('1c_Pjefz-dtpBI2Yq6iPvPnSC5IkkWh7eCmdWaG39tzw','Proposals')
-        sheet.replace_values(cloud_id,{'status': 'Denied','notification':'Pending', 'signed_concent': 'Disapproved','updated_at': last_update})
+        sheet.replace_values(cloud_id,{'status': 'Denied','notification':'Pending','updated_at': last_update})
         time.sleep(2)
         st.success(f"Propuesta denegada con éxito.", icon=":material/thumb_down:")
         st.rerun()
