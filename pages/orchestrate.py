@@ -266,7 +266,6 @@ def send_notification_email(connector: Firestore, volunteer_data: dict):
             st.error(f"Error al actualizar Google Sheets: {str(e)}")
             return
         
-        st.info("Enviando email de notificación...", icon=":material/email:")
         st.success(f"Email enviado exitosamente a {full_name}", icon=":material/mark_email_read:")
     
     except smtplib.SMTPException as e:

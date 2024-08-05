@@ -29,18 +29,29 @@ class CategoryUtils:
 
 
     @staticmethod
-    def format_date(fecha_str,city):
-        locale.setlocale(locale.LC_TIME, 'es_ES.UTF-8')
-        
+    def format_date(fecha_str, city):
+        dias_semana = {
+            0: "Lunes",
+            1: "Martes",
+            2: "Miércoles",
+            3: "Jueves",
+            4: "Viernes",
+            5: "Sábado",
+            6: "Domingo"
+        }
+
         fecha = datetime.strptime(fecha_str, '%d-%m-%Y')
         zona_colombia = pytz.timezone('America/Bogota')
         fecha_colombia = zona_colombia.localize(fecha)
+
+        # Usar el mapeo personalizado para el día de la semana
+        dia_semana = dias_semana[fecha_colombia.weekday()]
         
-        dia_semana = fecha_colombia.strftime('%A').capitalize()
+        # Usar strftime para el resto de la información
         dia = fecha_colombia.day
         mes = fecha_colombia.strftime('%B').lower()
         año = fecha_colombia.year
-        
+
         return f"{dia_semana}, {dia} de {mes} de {año}, {city}"
     
     @staticmethod

@@ -170,14 +170,12 @@ def sheets_proposal(data: List[List[str]]):
         st.error(f"Lo siento, ha ocurrido un error al enviar los datos: {str(e)}")
         return False
 
-def main():
-    st.title("Acuerdo de Voluntariado Circle Up Community")
+def update_volunteer_data():
+    get_volunteer_id.clear()
+    get_volunteer_data.clear()
+    st.rerun()
 
-    st.write("""
-    Bienvenido al paso final para lanzar tu curso con Circle Up Community.
-    Aquí formalizarás tu propuesta de curso de 2 horas para un sábado y aceptarás nuestro acuerdo de voluntariado.
-    Al completar este formulario, recibirás el acuerdo de voluntariado por correo electrónico en aproximadamente 2 minutos.
-    """)
+def main():
 
     with st.form("curso_form"):
 
@@ -288,9 +286,11 @@ def main():
 
     if submitted:
         missing_fields = []
-
-        volunteers = get_volunteer_id()
-        st.session_state.data_volunteer = get_volunteer_data(volunteers[st.session_state.volunteer_mail])
+        with st.spinner(':material/build Estamos creado tu propuesta...'):
+            volunteers = get_volunteer_id()
+            time.sleep(2)
+            st.session_state.data_volunteer = get_volunteer_data(volunteers[st.session_state.volunteer_mail])
+            time.sleep(2)
 
         # Verificar campos de la sección 1
         if not st.session_state.check_structure_form:
@@ -345,12 +345,20 @@ def main():
             st.success("Todos los campos han sido completados correctamente.", icon=":material/check_circle:")
 
             collection_data = prepare_collection(volunteer_data)
-            doc_ref = connector().add_document('course_proposal',collection_data)
-            collection_data['cloud_id'] = doc_ref.id
-            sheets_proposal([list(collection_data.values())])
+            with st.spinner(':material/autorenew Estamos cargando tu propuesta...'):
+                doc_ref = connector().add_document('course_proposal',collection_data)
+                time.sleep(2)
 
+            collection_data['cloud_id'] = doc_ref.id
+            with st.spinner(':material/autorenew Estamos Enviado tu propuesta...'):
+                sheets_proposal([list(collection_data.values())])
+                time.sleep(2)
+            
             sheets_data = prepare_data(volunteer_data)
-            sheets_agreement([sheets_data])
+
+            with st.spinner(':material/policy Estamos Creado Acuerdo Voluntariado...'):
+                sheets_agreement([sheets_data])
+                time.sleep(2)
             
             st.success(
                 """
@@ -376,6 +384,17 @@ def main():
     return None
 
 if st.session_state.enable_form:
+    st.title("Acuerdo de Voluntariado Circle Up Community")
+    st.write("""
+    Bienvenido al paso final para lanzar tu curso con Circle Up Community.
+    Aquí formalizarás tu propuesta de curso de 2 horas para un sábado y aceptarás nuestro acuerdo de voluntariado.
+    Al completar este formulario, recibirás el acuerdo de voluntariado por correo electrónico en aproximadamente 2 minutos.
+    """)
+
+    if st.button(":material/database: Actualizar Voluntarios",use_container_width=True):
+        update_volunteer_data()
+        st.rerun()
+
     main()
 else:
     st.title("Acuerdo de Voluntariado Circle Up Community")
@@ -432,7 +451,9 @@ else:
         icon=":material/handshake:"
     )
 
-    
+    if st.button(":material/attach_email: Otra Propuesta",use_container_width=True):
+        st.session_state.enable_form = True
+        st.rerun()
 
 menu()
 

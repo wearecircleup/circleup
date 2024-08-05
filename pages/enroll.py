@@ -8,7 +8,7 @@ from classes.spread_class import Sheets
 from classes.firestore_class import Firestore
 from classes.blobs_class import GoogleBlobs
 from classes.users_class import Users
-from typing import Dict, List
+from typing import Dict, List, Optional
 from itertools import chain
 from google.cloud.exceptions import NotFound, Conflict
 from googleapiclient.errors import HttpError
@@ -66,12 +66,13 @@ def get_course_data():
             'status', 'signed_concent', 'updated_at', 'notification'
         ])
 
+@st.cache_data(ttl=900, show_spinner=False)
 def get_intake_data():
     try:
         Conn = connector()
         course_requests = Conn.query_collection('intake_collection', [
             ('cloud_id_user', '==', st.session_state.user_auth.cloud_id),
-            ('status', '==', 'Enrrolled')
+            ('status', '==', 'Enrolled')
         ])
         courses_data = [doc.data for doc in course_requests]
         dataset = pd.DataFrame(courses_data)
@@ -163,7 +164,7 @@ def send_to_sheets(data: List[List[str]],sheet_id,sheet_name):
     
 def update_sheets(cloud_id):
     last_update = CategoryUtils().get_current_date()
-    updates = {'attendance_record': 0, 'email_notice': 'Pending','email_reminder': 0,'status':'Unenrrolled','last_change':last_update}
+    updates = {'attendance_record': 0, 'email_notice': 'Pending','email_reminder': 0,'status':'Unenrolled','last_change':last_update}
     try:
         sheet = Sheets('1c_Pjefz-dtpBI2Yq6iPvPnSC5IkkWh7eCmdWaG39tzw','Enrollment')
         sheet.replace_values(cloud_id, updates)
@@ -173,7 +174,7 @@ def update_sheets(cloud_id):
 
 def update_firebase(cloud_id):
     last_update = CategoryUtils().get_current_date()
-    updates = {'attendance_record': 0, 'email_notice': 'Pending','email_reminder': 0,'status':'Unenrrolled','last_change':last_update}
+    updates = {'attendance_record': 0, 'email_notice': 'Pending','email_reminder': 0,'status':'Unenrolled','last_change':last_update}
     try:
         connector().update_document('intake_collection', cloud_id, updates)
         return True
@@ -225,7 +226,6 @@ def unenrollment_notice(cloud_id: str, selected_course):
         time.sleep(3)
 
     st.session_state.lock_courses = lock_data('course_name')
-    st.rerun()
 
 def show_explore():
     st.session_state.show_explore = True
@@ -235,16 +235,33 @@ def show_manage():
     st.session_state.show_manage = True
     st.session_state.show_explore = False
 
+
+def is_age_category_appropriate(user_age_category: str, allowed_ages: str) -> bool:
+    """Verifica si la categoría de edad del usuario está en las categorías permitidas."""
+    allowed_categories = [cat.strip() for cat in allowed_ages.split(',')]
+    return user_age_category in allowed_categories
+
+def filter_age_appropriate_courses(data_courses: pd.DataFrame, user_age_category: str) -> pd.DataFrame:
+    """Filtra los cursos apropiados para la categoría de edad del usuario."""
+    return data_courses[data_courses['allowed_age'].apply(lambda x: is_age_category_appropriate(user_age_category, x) if pd.notna(x) else False)]
+
+def update_intakes():
+    get_intake_data.clear()
+    st.rerun()
+
 def entry_unregister():
-    data_courses = get_course_data()
-    intake_courses = get_intake_data()
+    try:
+        data_courses = get_course_data()
+        intake_courses = get_intake_data()
 
-    user_age = CategoryUtils().age_to_category(st.session_state.user_auth.dob)
-    age_appropriate = data_courses['allowed_age'].apply(lambda x: user_age in x.split(',')).any()
+        st.write(intake_courses)
 
-    course_options = list(set(st.session_state.lock_courses))
+        if data_courses.empty or intake_courses.empty:
+            st.error("No se pudieron cargar los datos de los cursos. Por favor, intenta más tarde.", icon=":material/error:")
+            return
 
-    if age_appropriate:
+        course_options = list(set(st.session_state.lock_courses))
+
         if course_options:
             st.warning("**¿Estás seguro de que deseas cancelar tu inscripción en algún curso?** :orange[**Esta acción no se puede deshacer.**]", icon=":material/shadow_minus:")
 
@@ -257,130 +274,145 @@ def entry_unregister():
             )
 
             if selected_course:
-                selected_request = data_courses[data_courses['course_name'] == selected_course].iloc[0]
-                
+                try:
+                    selected_request = data_courses[data_courses['course_name'] == selected_course].iloc[0]
+                except IndexError:
+                    st.error(f"No se encontró información para el curso '{selected_course}'. Por favor, contacta al soporte.", icon=":material/error:")
+                    return
+
                 if not selected_request.empty:
+                    try:
+                        filter_ids = data_courses[data_courses['course_name'] == selected_course][['cloud_id_course','cloud_id_volunteer']]
+                        course_definition = filter_ids.to_dict(orient='records')[0]
 
-                    filter_ids = data_courses[(data_courses['course_name'] == selected_course)][['cloud_id_course','cloud_id_volunteer']]
-                    course_definition = filter_ids.to_dict(orient='records')[0]
+                        volunter_id = intake_courses['cloud_id_volunteer'] == course_definition['cloud_id_volunteer']
+                        course_id = intake_courses['cloud_id_course'] == course_definition['cloud_id_course']
+                        
+                        enrollment_id = intake_courses[(volunter_id) & (course_id)]['cloud_id']
+                        
+                        if enrollment_id.empty:
+                            st.error("No se encontró tu inscripción para este curso. Por favor, contacta al soporte.", icon=":material/error:")
+                            return
+                        
+                        enrollment_id = str(enrollment_id.iloc[0])
 
-                    volunter_id = intake_courses['cloud_id_volunteer'] == course_definition['cloud_id_volunteer']
-                    course_id = intake_courses['cloud_id_course'] == course_definition['cloud_id_course']
-                    
-                    enrollment_id = intake_courses[(volunter_id) & (course_id)]['cloud_id']
-                    enrollment_id = str(enrollment_id.iloc[0])
+                        st.write("Aquí tienes la información del curso que has seleccionado para cancelar")
+                        course_description(selected_request)
 
+                        st.error("**¿Estás segur@ de que deseas cancelar tu inscripción en este curso?**", icon=":material/delete:")
+                        if st.button('Cancelar Inscripción', type='secondary', use_container_width=True):
+                            unenrollment_notice(enrollment_id, selected_course)
+                            st.success(st.session_state.confirmation_message, icon=":material/data_check:")
 
-                    st.write("Aquí tienes la información del curso que has seleccionado para cancelar")
-                    course_description(selected_request)
-
-                    st.error("**¿Estás segur@ de que deseas cancelar tu inscripción en este curso?**", icon=":material/delete:")
-                    if st.button('Cancelar Inscripción', type='secondary', use_container_width=True):
-                        unenrollment_notice(enrollment_id,selected_course)
-                        st.success(st.session_state.confirmation_message,icon=":material/data_check:")
+                    except KeyError as e:
+                        st.error(f"Error al procesar los datos del curso: {str(e)}. Por favor, contacta al soporte.", icon=":material/error:")
+                    except Exception as e:
+                        st.error(f"Ocurrió un error inesperado: {str(e)}. Por favor, intenta de nuevo o contacta al soporte.", icon=":material/error:")
 
             else:
                 st.info("Selecciona un curso de la lista para proceder con la cancelación.", icon=":material/ads_click:")
         else:
-            st.error("Actualmente :red-background[no estás inscrito] en ningún curso. :red[**Explora nuestras opciones de cursos disponibles.**] Si ya te registraste en un curso, lo verás en tu gestión de inscripciones en aproximadamente ~1 hora.", icon=":material/pending_actions:")
-    else:
-        st.warning("Por el momento no tenemos cursos disponibles para ti. Si crees que esto es un error, por favor contáctanos a wearecircleup@gmail.com.", icon=":material/notifications:")
+            st.warning("Por el momento no tenemos cursos disponibles para ti. Si crees que esto es un error, por favor contáctanos a wearecircleup@gmail.com.", icon=":material/notifications:")
 
+    except Exception as e:
+        st.error(f"Se produjo un error inesperado: {str(e)}. Por favor, intenta de nuevo o contacta al soporte.", icon=":material/error:")
 
-    if st.button(":material/explore: Volver a Explorar",type='primary',use_container_width=True):
-        st.session_state.show_manage = False
-        st.rerun()
 
 def entry_registration():
+    try:
+        data_courses = get_course_data()
 
-    data_courses = get_course_data()
-    user_age = CategoryUtils().age_to_category(st.session_state.user_auth.dob)
-    age_appropriate = data_courses['allowed_age'].apply(lambda x: user_age in x.split(',')).any()
-    if age_appropriate:
-        st.write("Entonces, revisemos los siguientes pasos para explorar y registrarte en los cursos.")
+        if data_courses.empty:
+            st.warning("No hay cursos disponibles en este momento. Por favor, intenta más tarde.", icon=":material/calendar_clock:")
+            return
 
-        st.info("**Paso 1** Elige una Categoría",icon=":material/self_improvement:")
-        category_options = get_uniques(data_courses, 'course_categories')
-        selected_category = st.selectbox(
-            "Explora nuestras categorías y elige la que más te interese",
-            options=category_options,
-            index=None,
-            placeholder='Seleccionar Categoría'
-        )
+        user_age_category: str = CategoryUtils().age_to_category(st.session_state.user_auth.dob)
+        age_appropriate_courses = filter_age_appropriate_courses(data_courses, user_age_category)
+        
+        if not age_appropriate_courses.empty:
+            st.write("Entonces, revisemos los siguientes pasos para explorar y registrarte en los cursos.")
 
-        if selected_category:
-            st.write("Explora los cursos de tu categoría elegida. Cada uno ofrece una experiencia única de aprendizaje.")
-            st.info("**Paso 2** Seleccionar Curso",icon=":material/self_improvement:")
-            filtered_courses = data_courses[data_courses['course_categories'].str.contains(selected_category)]
-            course_options = filtered_courses['course_name'].tolist()
-            selected_course = st.selectbox(
-                "Ahora, echa un vistazo a los cursos disponibles en esta categoría:",
-                options=course_options,
+            st.info("**Paso 1** Elige una Categoría", icon=":material/self_improvement:")
+            category_options: List[str] = get_uniques(age_appropriate_courses, 'course_categories')
+            selected_category: Optional[str] = st.selectbox(
+                "Explora nuestras categorías y elige la que más te interese",
+                options=category_options,
                 index=None,
-                placeholder='Seleccionar Curso'
+                placeholder='Seleccionar Categoría'
             )
 
-            if selected_course:
-                selected_request = filtered_courses[filtered_courses['course_name'] == selected_course].iloc[0]
-                if selected_course not in st.session_state.lock_courses:
-                    if not selected_request.empty:
-                        st.write("Aquí tienes toda la información detallada sobre el curso seleccionado. Revisa cuidadosamente los objetivos, el perfil del instructor y los requisitos para asegurarte de que este curso sea el adecuado para ti.")
-                        course_description(selected_request)
+            if selected_category:
+                st.write("Explora los cursos de tu categoría elegida. Cada uno ofrece una experiencia única de aprendizaje.")
+                st.info("**Paso 2** Seleccionar Curso", icon=":material/self_improvement:")
+                filtered_courses = age_appropriate_courses[age_appropriate_courses['course_categories'].str.contains(selected_category, na=False)]
+                course_options: List[str] = filtered_courses['course_name'].tolist()
+                selected_course: Optional[str] = st.selectbox(
+                    "Ahora, echa un vistazo a los cursos disponibles en esta categoría:",
+                    options=course_options,
+                    index=None,
+                    placeholder='Seleccionar Curso'
+                )
 
-                        utils = CategoryUtils()
+                if selected_course:
+                    selected_request = filtered_courses[filtered_courses['course_name'] == selected_course].iloc[0]
+                    if selected_course not in st.session_state.lock_courses:
+                        if not selected_request.empty:
+                            st.write("Aquí tienes toda la información detallada sobre el curso seleccionado. Revisa cuidadosamente los objetivos, el perfil del instructor y los requisitos para asegurarte de que este curso sea el adecuado para ti.")
+                            course_description(selected_request)
 
-                        reminder = f"""El curso de {selected_request['course_name']} {
-                                                        'será en modalidad ' + selected_request['modality_proposal'].lower() 
-                                                        if selected_request['modality_proposal'].lower() == 'virtual' 
-                                                        else f"se realizará en {selected_request['place_proposal']}, {selected_request['city_proposal']}"
-                                                    }. Está diseñado para participantes de {selected_request['allowed_age']} años{
-                                                        f" y es recomendable que cuentes con {selected_request['prior_knowledge'].lower()}" 
-                                                        if selected_request['prior_knowledge'].lower() != 'no aplica' 
-                                                        else ''
-                                                    }. Seremos un grupo de {selected_request['min_audience']} a {selected_request['max_audience']} personas{
-                                                        f", así que no olvides {selected_request['tech_resources'].lower()}" 
-                                                        if selected_request['tech_resources'].lower() != 'no aplica' 
-                                                        else ''
-                                                    }. Este curso se encuentra dentro de las categorías de {selected_request['course_categories']}."""
-                        
-                        data_collection = {
-                            'enrolled_at':utils.get_current_date(),
-                            'week':utils.date_to_day_of_week(),
-                            'hour_range':utils.time_to_category(),
-                            'cloud_id':None,
-                            'cloud_id_user':st.session_state.user_auth.cloud_id,
-                            'cloud_id_volunteer':selected_request['cloud_id_volunteer'],
-                            'cloud_id_course':selected_request['cloud_id_course'],
-                            'first_name':st.session_state.user_auth.first_name,
-                            'last_name':st.session_state.user_auth.last_name,
-                            'email':st.session_state.user_auth.email,
-                            'start_date':selected_request['start_date'],
-                            'summary': reminder,
-                            'attendance_record':0,
-                            'email_notice':'Pending',
-                            'email_reminder':0,
-                            'status':'Enrrolled',
-                            'last_change':utils.get_current_date()
-                        }
-                        
-                        if st.button('Registrarse',use_container_width=True,type='primary'):
-                            enrollment_notice(data_collection,selected_course)
-                            st.success(st.session_state.confirmation_message,icon=":material/data_check:")
+                            utils = CategoryUtils()
 
+                            reminder = f"""El curso de {selected_request['course_name']} {
+                                'será en modalidad ' + selected_request['modality_proposal'].lower() 
+                                if selected_request['modality_proposal'].lower() == 'virtual' 
+                                else f"se realizará en {selected_request['place_proposal']}, {selected_request['city_proposal']}"
+                            }. Está diseñado para participantes de {selected_request['allowed_age']}{
+                                f" y es recomendable que cuentes con {selected_request['prior_knowledge'].lower()}" 
+                                if selected_request['prior_knowledge'].lower() != 'no aplica' 
+                                else ''
+                            }. Seremos un grupo de {selected_request['min_audience']} a {selected_request['max_audience']} personas{
+                                f", así que no olvides {selected_request['tech_resources'].lower()}" 
+                                if selected_request['tech_resources'].lower() != 'no aplica' 
+                                else ''
+                            }. Este curso se encuentra dentro de las categorías de {selected_request['course_categories']}."""
+                            
+                            data_collection = {
+                                'enrolled_at': utils.get_current_date(),
+                                'week': utils.date_to_day_of_week(),
+                                'hour_range': utils.time_to_category(),
+                                'cloud_id': None,
+                                'cloud_id_user': st.session_state.user_auth.cloud_id,
+                                'cloud_id_volunteer': selected_request['cloud_id_volunteer'],
+                                'cloud_id_course': selected_request['cloud_id_course'],
+                                'first_name': st.session_state.user_auth.first_name,
+                                'last_name': st.session_state.user_auth.last_name,
+                                'email': st.session_state.user_auth.email,
+                                'start_date': selected_request['start_date'],
+                                'summary': reminder,
+                                'attendance_record': 0,
+                                'email_notice': 'Pending',
+                                'email_reminder': 0,
+                                'status': 'Enrolled',
+                                'last_change': utils.get_current_date()
+                            }
+                            
+                            if st.button('Registrarse', use_container_width=True, type='primary'):
+                                enrollment_notice(data_collection, selected_course)
+                                st.success(st.session_state.confirmation_message, icon=":material/data_check:")
+
+                    else:
+                        st.success(
+                            f"¡Genial! Ya estás en :green[**{selected_course}**]. Revisa tu email para actualizaciones. Si no los recibes, escribe a wearecircleup@gmail.com. Mientras tanto, explora más cursos en :green[**Circle Up Community**].",
+                            icon=":material/concierge:")
                 else:
-                    st.success(
-                                f"¡Genial! Ya estás en :green[**{selected_course}**]. Revisa tu email para actualizaciones. Si no los recibes, escribe a wearecircleup@gmail.com. Mientras tanto, explora más cursos en :green[**Circle Up Community**].",
-                                icon=":material/concierge:")
+                    st.info("Selecciona un curso para ver más detalles. Cada curso ha sido cuidadosamente diseñado para ofrecerte una experiencia de aprendizaje enriquecedora.", icon=":material/library_books:")
             else:
-                st.info("Selecciona un curso para ver más detalles. Cada curso ha sido cuidadosamente diseñado para ofrecerte una experiencia de aprendizaje enriquecedora.", icon=":material/library_books:")
+                st.info("Explora nuestras categorías para encontrar el tema que más te apasione. Tenemos una amplia gama de opciones para satisfacer diversos intereses y niveles de experiencia.", icon=":material/explore:")
         else:
-            st.info("Explora nuestras categorías para encontrar el tema que más te apasione. Tenemos una amplia gama de opciones para satisfacer diversos intereses y niveles de experiencia.", icon=":material/explore:")
-    else:
-        st.warning("Por el momento no tenemos cursos disponibles para tu rango de edad, pero no te preocupes. Estamos trabajando constantemente para ampliar nuestra oferta. Te avisaremos tan pronto como tengamos opciones adecuadas para ti.", icon=":material/notifications:")
+            st.warning("Por el momento no tenemos cursos disponibles para tu rango de edad, pero no te preocupes. Estamos trabajando constantemente para ampliar nuestra oferta. Te avisaremos tan pronto como tengamos opciones adecuadas para ti.", icon=":material/notifications:")
 
-    if st.button(":material/explore: Volver a Explorar",type='primary',use_container_width=True):
-        st.session_state.show_explore = False
-        st.rerun()
+    except Exception as e:
+        st.error(f"Error al procesar la inscripción: {str(e)}")
 
 def parental_update(connector: Firestore, cloud_id: str):
     try:
@@ -415,31 +447,35 @@ def parental_logs(link_auth=None):
         link_auth]
 
 def main():
-    st.warning(":orange[**Duración Cursos**] :orange-background[2 horas maximo], sesión exclusiva y :orange-background[Cupos limitados]", icon=":material/attach_file:")
+    try:
+        st.warning(":orange[**Duración Cursos**] :orange[**2 horas maximo**], sesión exclusiva / :orange-background[Cupos limitados]", icon=":material/attach_file:")
 
-    if 'lock_courses' not in st.session_state:
+        if 'lock_courses' not in st.session_state:
             st.session_state.lock_courses = lock_data('course_name')
 
-    if 'confirmation_message' in st.session_state:
-        st.success(st.session_state.confirmation_message,icon=":material/data_check:")
-        del st.session_state.confirmation_message
+        if 'confirmation_message' in st.session_state:
+            st.success(st.session_state.confirmation_message, icon=":material/data_check:")
+            # del st.session_state.confirmation_message
 
-    if not st.session_state.show_explore and not st.session_state.show_manage:
-        st.info("**Paso 0:** :blue-background[¿Qué te gustaría hacer?] En :blue[**Explorar Cursos**] puedes registrarte en cursos que te interesen, y en :blue[**Gestionar Inscripciones**] puedes revisar tus cursos inscritos o cancelar tu participación.", icon=":material/self_improvement:")
+        if not st.session_state.show_explore and not st.session_state.show_manage:
+            st.info("**Paso 0:** :blue-background[¿Qué te gustaría hacer?] En :blue[**Explorar Cursos**] puedes registrarte en cursos que te interesen, y en :blue[**Gestionar Inscripciones**] puedes revisar tus cursos inscritos o cancelar tu participación.", icon=":material/self_improvement:")
 
-        col1, col2 = st.columns(2)
-        with col1:
-            st.button(":material/travel_explore: Explorar Cursos", key="discover_courses", type='primary', 
-                    use_container_width=True, on_click=show_explore)
-        with col2:
-            st.button(":material/bookmarks: Gestionar Inscripciones", key="manage_registrations", type='secondary', 
-                    use_container_width=True, on_click=show_manage)
+            col1, col2 = st.columns(2)
+            with col1:
+                st.button(":material/travel_explore: Explorar Cursos", key="discover_courses", type='primary', 
+                        use_container_width=True, on_click=show_explore)
+            with col2:
+                st.button(":material/bookmarks: Gestionar Inscripciones", key="manage_registrations", type='secondary', 
+                        use_container_width=True, on_click=show_manage)
 
-    if st.session_state.show_explore:
-        entry_registration()
+        if st.session_state.show_explore:
+            entry_registration()
 
-    if st.session_state.show_manage:
-        entry_unregister()
+        if st.session_state.show_manage:
+            entry_unregister()
+
+    except Exception as e:
+        st.error(f"Se ha producido un error inesperado: {str(e)}")
 
 def parental_menu():
     st.info(
@@ -480,7 +516,13 @@ try:
     st.write("Bienvenido a nuestra plataforma de aprendizaje. Aquí podrás encontrar cursos diseñados para potenciar tus habilidades y conocimientos.")
 
     if st.session_state.user_auth.parental_consent in ['Not Applicable','Authorized']:
+        if st.button(':material/cloud_sync: Actualizar Inscripciones',use_container_width=True):
+                    update_intakes()
         main()
+        if st.button(":material/explore: Volver a Explorar", type='primary', use_container_width=True):
+            st.session_state.show_manage = False
+            st.session_state.show_explore = False
+
     else:
         parental_menu()
 

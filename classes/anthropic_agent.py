@@ -24,7 +24,7 @@ def brainstorming(profile: str, client) -> str:
     2. Párrafo descriptivo y argumentativo que (MAXIMO 55 Palabras):
     - Detalle el contenido específico del curso (ej. Python: estructuras de datos, listas, tuplas).
     - Explique los beneficios tangibles para los participantes.
-    - Demuestre la relevancia y aplicación práctica en contextos comunitarios en paises en desarrollo en america latina.
+    - Demuestre la relevancia y aplicación práctica en contextos reales en paises en desarrollo en america latina.
     - Enfatice el desarrollo de habilidades blandas sobre el impacto académico.
     - Proporcione instrucciones claras sobre cómo se debe construir y desarrollar el curso.
 
@@ -89,7 +89,7 @@ def generate_community_academic_presentation_content(context: str, client) -> Di
     format_instructions = output_parser.get_format_instructions()
 
     prompt = ChatPromptTemplate.from_template(
-        """Genere contenido para una presentación académica comunitaria sobre: {context}
+        """Genera contenido para una presentación catedratica, agradable, esta presentacion se da en el contexto de community based learning y el tema es sobre: {context}
 
         {format_instructions}
 
