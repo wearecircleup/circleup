@@ -1,7 +1,6 @@
 streamlit
 pandas
 numpy
-plotly
 google-cloud-firestore
 anthropic
 langchain==0.2.6

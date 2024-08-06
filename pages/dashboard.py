@@ -5,8 +5,6 @@ from google.cloud import firestore
 import pandas as pd
 import time
 import altair as alt
-import matplotlib.pyplot as plt
-import numpy as np
 
 
 from menu import menu
