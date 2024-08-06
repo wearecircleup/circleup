@@ -6,7 +6,6 @@ import pandas as pd
 import time
 import altair as alt
 
-
 from menu import menu
 from classes.firestore_class import Firestore
 from classes.utils_class import CategoryUtils
@@ -224,7 +223,7 @@ def expand_rows(row):
     estilos = row['Estilo Aprendizaje'].split(',')
     return pd.DataFrame({
         'Estilo Aprendizaje': estilos,
-        'Género': [row['Género']] * len(estilos)
+        'Grupo Edad': [row['Grupo Edad']] * len(estilos)
     })
 
 def intake_dashboard(course_details):
@@ -237,9 +236,9 @@ def intake_dashboard(course_details):
     
     st.info("""
     Este dashboard presenta información agregada sobre los participantes inscritos en el curso. 
-    Estos datos son confidenciales y están protegidos por la Política de Protección de Datos de Circle Up Community. 
+    Estos datos son confidenciales y están protegidos por la [Política de Protección de Datos de Circle Up Community.](https://drive.google.com/file/d/18Vu3lsHP0_UszWxSr8uez4W7P3_FWKfe/view) 
     Su uso está estrictamente limitado al desarrollo y mejora de la experiencia educativa. 
-    No comparta esta información con terceros.
+    :blue[**No comparta esta información con terceros.**]
     """)
     
     total_enrolled = len(users_enrolled)
@@ -253,8 +252,8 @@ def intake_dashboard(course_details):
     
     with col1:
 
-        st.title("Distribución por Edad y Género")
-        st.info("Este gráfico muestra la composición demográfica del grupo por edad y género.")
+        st.title("Distribución Edad/Género")
+        st.info("Composición demográfica del grupo, permitiendo identificar la diversidad etaria y de género para adaptar el contenido del curso.")
 
         age_gender = users_enrolled.groupby(['Grupo Edad', 'Género']).size().reset_index(name='count')
         total_count_ag = age_gender['count'].sum()
@@ -270,14 +269,14 @@ def intake_dashboard(course_details):
         st.altair_chart(chart_col1, use_container_width=True)
 
     with col2:
-        st.title("Distribución por Nacionalidad")
-        st.info("Este gráfico presenta la diversidad de proveniencia de los participantes.")
+        st.title("Distribución Ciudad")
+        st.info("La diversidad geográfica de los participantes ayuda a considerar diferentes contextos regionales en el diseño del curso.")
 
         city_gender = users_enrolled.groupby(['Ciudad', 'Género']).size().reset_index(name='count')
         total_count_cg = city_gender['count'].sum()
         city_gender['Porcentaje (%)'] = (city_gender['count'] / total_count_cg * 100).round(2)
 
-        chart_col2 = alt.Chart(city_gender).mark_rect().encode(
+        chart_col2 = alt.Chart(city_gender).mark_bar().encode(
             x='Género:N',
             y='Porcentaje (%):Q',
             color='Ciudad:N',
@@ -290,16 +289,16 @@ def intake_dashboard(course_details):
     
     with col3:
 
-        st.title("Distribución por Nivel Educativo")
-        st.info("Este gráfico presenta la diversidad de nivel educativo de los participantes.")
+        st.title("Nivel Educativo")
+        st.info("El análisis de los niveles educativos permite ajustar la complejidad del contenido del curso para satisfacer las necesidades de todos los participantes.")
 
         edu_gender = users_enrolled.groupby(['Nivel Educativo', 'Género']).size().reset_index(name='count')
         total_count_eg = edu_gender['count'].sum()
         edu_gender['Porcentaje (%)'] = (edu_gender['count'] / total_count_eg * 100).round(2)
 
-        chart_col3 = alt.Chart(edu_gender).mark_rect().encode(
-            x='Género:N',
-            y='Porcentaje (%):Q',
+        chart_col3 = alt.Chart(edu_gender).mark_bar().encode(
+            y='Género:N',
+            x='Porcentaje (%):Q',
             color='Nivel Educativo:N',
             tooltip=['Nivel Educativo', 'Género', alt.Tooltip('Porcentaje (%):Q', format='.1f')]
         ).properties(title='Distribución de Nivel Educativo / Género',height=300)
@@ -307,26 +306,27 @@ def intake_dashboard(course_details):
         st.altair_chart(chart_col3, use_container_width=True)
     
     with col4:
-        
-        st.title("Distribución por Estilo Aprendizaje")
-        st.info("Este gráfico presenta la diversidad de Estilo Aprendizaje de los participantes.")
 
-        expanded_df = pd.concat([expand_rows(row) for _, row in users_enrolled[['Estilo Aprendizaje', 'Género']].iterrows()], ignore_index=True)
-        learn_gender = expanded_df.groupby(['Estilo Aprendizaje', 'Género']).size().reset_index(name='count')
+        st.title("Estilos Aprendizaje")
+        st.info("Conocer los estilos de aprendizaje predominantes facilita la adaptación de las metodologías de enseñanza para maximizar la efectividad del curso.")
+
+        expanded_df = pd.concat([expand_rows(row) for _, row in users_enrolled[['Estilo Aprendizaje', 'Grupo Edad']].iterrows()], ignore_index=True)
+        learn_gender = expanded_df.groupby(['Estilo Aprendizaje', 'Grupo Edad']).size().reset_index(name='count')
         total_count_lg = learn_gender['count'].sum()
         learn_gender['Porcentaje (%)'] = (learn_gender['count'] / total_count_lg * 100).round(2)
 
         chart_col4 = alt.Chart(learn_gender).mark_bar().encode(
-            x='Género:N',
-            y='Porcentaje (%):Q',
+            y='Grupo Edad:N',
+            x='Porcentaje (%):Q',
             color='Estilo Aprendizaje:N',
-            tooltip=['Estilo Aprendizaje', 'Género', alt.Tooltip('Porcentaje (%):Q', format='.1f')]
-        ).properties(title='Distribución de Edades / Género',height=300)
+            tooltip=['Estilo Aprendizaje', 'Grupo Edad', alt.Tooltip('Porcentaje (%):Q', format='.1f')]
+        ).properties(title='Distribución de Edades / Grupo Edad',height=300)
 
         st.altair_chart(chart_col4, use_container_width=True)
     
     st.title("Resumen de Participantes")
-    st.info("Esta tabla proporciona información detallada sobre cada participante.")
+    st.info("Esta tabla muestra información de contacto de emergencia y datos demográficos de los participantes, crucial para la gestión segura y eficiente del curso.")
+    
     users_enrolled['Nombre'] = users_enrolled['Nombre'] + ' ' + users_enrolled['Apellido']
     summary = users_enrolled[['Nombre','Rol','Contacto Emergencia','Parentesco','Tel. Emergencia','Div. Funcional','Grupo Étnico']]
     st.dataframe(summary.dropna(), hide_index=True, use_container_width=True)
