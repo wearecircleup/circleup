@@ -131,13 +131,12 @@ volunteer_level = [
     ]
 
 education_level = [
-    'Sin estudios formales',
     'Primaria',
     'Secundaria',
     'Bachillerato',
     'Técnico',
     'Tecnólogo',
-    'Universidad (Pregrado)',
+    'Pregrado',
     'Especialización',
     'Maestría',
     'Doctorado',
@@ -151,8 +150,7 @@ id_user_list = ["T.I.","C.C.","C.E.","P.C."]
 gender_list = [
     "Hombre",
     "Mujer",
-    "Otro",
-    "Prefiero no especificar"
+    "Otro"
 ]
 
 #Discapacidades
@@ -214,13 +212,13 @@ skills = [
 
 # Formas de aprender
 how_to_learn = [
-    "Viendo (videos, imágenes)",
-    "Escuchando (audio, podcasts)",
+    "Viendo",
+    "Escuchando",
     "Leyendo",
     "Practicando",
-    "Enseñando a otros",
-    "Discutiendo en grupo",
-    "Investigando por mi cuenta",
+    "Enseñando",
+    "Discutiendo",
+    "Investigando",
     "Otro"
 ]
 

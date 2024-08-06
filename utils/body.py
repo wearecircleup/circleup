@@ -114,7 +114,9 @@ def warning_profile_changes(changes):
         'guardian_relationship':'Parentesco',
         'emergency_phone':'Telefono Tutor/Emergencia',
         'how_to_learn':'¿Cómo aprendes mejor?',
-        'skills':'Selecciona tus habilidades'
+        'skills':'¿Cuáles son tus habilidades?',
+        'strengths':'¿Cuáles son tus fortalezas?',
+        'weaknesses':'¿Cuáles son tus debilidades?'
     }
 
     st.markdown("Actualizar tu perfil, especialmente tu correo electrónico, números de contacto y número de emergencia, nos ayuda a mantener nuestra base de datos precisa y actualizada.")

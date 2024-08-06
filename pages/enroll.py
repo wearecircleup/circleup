@@ -72,6 +72,7 @@ def get_intake_data():
         Conn = connector()
         course_requests = Conn.query_collection('intake_collection', [
             ('cloud_id_user', '==', st.session_state.user_auth.cloud_id),
+            ('cloud_id_volunteer', '!=', st.session_state.user_auth.cloud_id),
             ('status', '==', 'Enrolled')
         ])
         courses_data = [doc.data for doc in course_requests]
@@ -84,18 +85,17 @@ def get_intake_data():
             'attendance_record', 'email_notice', 'email_reminder', 'status', 'last_change'
         ])
 
+
 def lock_data(field):
     try:
         data_courses = get_course_data()
         users_enrollments = get_intake_data()
         enlistment = pd.merge(data_courses, users_enrollments, on=['cloud_id_course'], how='inner')
-        categories = enlistment[field].str.split(',')
-        flattened_categories = chain.from_iterable(categories)
-        unique_categories = sorted(set(flattened_categories))
-        
-        return unique_categories
+        categories = list(enlistment[field].values)
+        return categories
     except Exception as e:
         return []
+
 
 def course_description(course):
     st.info(f"¡{st.session_state.user_auth.first_name.capitalize()}! Aquí tienes los detalles del curso.\n :blue[**{course['course_name']}**]", icon=":material/dynamic_form:")
@@ -190,9 +190,10 @@ def send_to_firebase(data: Dict):
         return False
 
 def enrollment_notice(data: Dict, selected_course):
-    st.session_state.confirmation_message = ":green-background[Tu inscripción ha sido registrada exitosamente]. Ahora aparecerás en :green[**Gestionar Inscripciones**]. :green-background[Recibirás un email en ~5 min.]"
+    st.session_state.confirmation_message = f":green-background[Tu inscripción en {selected_course} ha sido registrada exitosamente]. Ahora aparecerás en :green[**Gestionar Inscripciones**]. :green-background[Recibirás un email en ~5 min.]"
 
     st.session_state.show_explore = False
+    st.session_state.show_manage = False
     
     cloud_id = send_to_firebase(data)
     data['cloud_id'] = cloud_id 
@@ -203,16 +204,17 @@ def enrollment_notice(data: Dict, selected_course):
                     "2. Si no recibes el email, escribe a wearecircleup@gmail.com\n"
                     "3. Si quieres donar o ayudar, escribe a +57 3046714626"):
         
-        time.sleep(3)
+        time.sleep(2)
         send_to_sheets(sheet_entry,'1c_Pjefz-dtpBI2Yq6iPvPnSC5IkkWh7eCmdWaG39tzw','Enrollment')
-        time.sleep(3)
+        time.sleep(2)
+        st.balloons()
 
-    st.session_state.lock_courses = lock_data('course_name')    
-    st.rerun()
+    st.session_state.lock_courses = lock_data('course_name')
 
 def unenrollment_notice(cloud_id: str, selected_course):
     st.session_state.confirmation_message = f":green-background[**Inscripción cancelada**] para :green[**{selected_course}**]. :green-background[**El cambio es inmediato**]. Puedes volver a inscribirte en cualquier momento, pero ten en cuenta que los cupos pueden completarse rápidamente."
 
+    st.session_state.show_explore = False
     st.session_state.show_manage = False
     update_firebase(cloud_id)
 
@@ -247,14 +249,11 @@ def filter_age_appropriate_courses(data_courses: pd.DataFrame, user_age_category
 
 def update_intakes():
     get_intake_data.clear()
-    st.rerun()
 
 def entry_unregister():
     try:
         data_courses = get_course_data()
         intake_courses = get_intake_data()
-
-        st.write(intake_courses)
 
         if data_courses.empty or intake_courses.empty:
             st.error("No se pudieron cargar los datos de los cursos. Por favor, intenta más tarde.", icon=":material/error:")
@@ -302,7 +301,8 @@ def entry_unregister():
                         st.error("**¿Estás segur@ de que deseas cancelar tu inscripción en este curso?**", icon=":material/delete:")
                         if st.button('Cancelar Inscripción', type='secondary', use_container_width=True):
                             unenrollment_notice(enrollment_id, selected_course)
-                            st.success(st.session_state.confirmation_message, icon=":material/data_check:")
+                            return
+                            # st.success(st.session_state.confirmation_message, icon=":material/data_check:")
 
                     except KeyError as e:
                         st.error(f"Error al procesar los datos del curso: {str(e)}. Por favor, contacta al soporte.", icon=":material/error:")
@@ -398,7 +398,8 @@ def entry_registration():
                             
                             if st.button('Registrarse', use_container_width=True, type='primary'):
                                 enrollment_notice(data_collection, selected_course)
-                                st.success(st.session_state.confirmation_message, icon=":material/data_check:")
+                                return
+                                # st.success(st.session_state.confirmation_message, icon=":material/data_check:")
 
                     else:
                         st.success(
@@ -429,7 +430,6 @@ def parental_update(connector: Firestore, cloud_id: str):
         return
 
     st.success("La solicitud ha sido aprobada exitosamente.")
-    st.rerun()
 
 def parental_logs(link_auth=None):
     utils = CategoryUtils()
@@ -450,12 +450,9 @@ def main():
     try:
         st.warning(":orange[**Duración Cursos**] :orange[**2 horas maximo**], sesión exclusiva / :orange-background[Cupos limitados]", icon=":material/attach_file:")
 
-        if 'lock_courses' not in st.session_state:
-            st.session_state.lock_courses = lock_data('course_name')
-
         if 'confirmation_message' in st.session_state:
             st.success(st.session_state.confirmation_message, icon=":material/data_check:")
-            # del st.session_state.confirmation_message
+            del st.session_state.confirmation_message
 
         if not st.session_state.show_explore and not st.session_state.show_manage:
             st.info("**Paso 0:** :blue-background[¿Qué te gustaría hacer?] En :blue[**Explorar Cursos**] puedes registrarte en cursos que te interesen, y en :blue[**Gestionar Inscripciones**] puedes revisar tus cursos inscritos o cancelar tu participación.", icon=":material/self_improvement:")
@@ -464,9 +461,11 @@ def main():
             with col1:
                 st.button(":material/travel_explore: Explorar Cursos", key="discover_courses", type='primary', 
                         use_container_width=True, on_click=show_explore)
+                update_intakes()
             with col2:
                 st.button(":material/bookmarks: Gestionar Inscripciones", key="manage_registrations", type='secondary', 
                         use_container_width=True, on_click=show_manage)
+                update_intakes()
 
         if st.session_state.show_explore:
             entry_registration()
@@ -514,14 +513,15 @@ def parental_menu():
 try:
     st.title("Explora Nuestros Cursos")
     st.write("Bienvenido a nuestra plataforma de aprendizaje. Aquí podrás encontrar cursos diseñados para potenciar tus habilidades y conocimientos.")
-
+    st.session_state.lock_courses = lock_data('course_name')
+    
     if st.session_state.user_auth.parental_consent in ['Not Applicable','Authorized']:
-        if st.button(':material/cloud_sync: Actualizar Inscripciones',use_container_width=True):
-                    update_intakes()
+
         main()
         if st.button(":material/explore: Volver a Explorar", type='primary', use_container_width=True):
             st.session_state.show_manage = False
             st.session_state.show_explore = False
+            update_intakes()
 
     else:
         parental_menu()

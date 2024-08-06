@@ -40,6 +40,21 @@ class CategoryUtils:
             6: "Domingo"
         }
 
+        meses = {
+            'January': 'enero',
+            'February': 'febrero',
+            'March': 'marzo',
+            'April': 'abril',
+            'May': 'mayo',
+            'June': 'junio',
+            'July': 'julio',
+            'August': 'agosto',
+            'September': 'septiembre',
+            'October': 'octubre',
+            'November': 'noviembre',
+            'December': 'diciembre'
+        }
+
         fecha = datetime.strptime(fecha_str, '%d-%m-%Y')
         zona_colombia = pytz.timezone('America/Bogota')
         fecha_colombia = zona_colombia.localize(fecha)
@@ -47,13 +62,15 @@ class CategoryUtils:
         # Usar el mapeo personalizado para el día de la semana
         dia_semana = dias_semana[fecha_colombia.weekday()]
         
-        # Usar strftime para el resto de la información
+        # Usar strftime para obtener el nombre del mes en inglés y luego traducirlo al español
+        mes_ingles = fecha_colombia.strftime('%B')
+        mes = meses[mes_ingles]
+        
         dia = fecha_colombia.day
-        mes = fecha_colombia.strftime('%B').lower()
         año = fecha_colombia.year
 
         return f"{dia_semana}, {dia} de {mes} de {año}, {city}"
-    
+        
     @staticmethod
     def parental_review(birth_date_str: str) -> str:
         try:
