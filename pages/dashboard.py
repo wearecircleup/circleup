@@ -47,6 +47,7 @@ def clear_names():
         'ethnic_affiliation': 'Grupo Étnico',
         'skills': 'Habilidades',
         'how_to_learn': 'Estilo Aprendizaje',
+        'email':'Email'
     }
     return column_rename_map
 
@@ -77,7 +78,7 @@ def tokens_generator(course_details):
         token_course = course_id + token +  utils.get_current_date().replace('-','')
         
         firebase_token = {'cloud_id': token_course,'token': token, 'cloud_id_volunteer':course_details['cloud_id_volunteer'],
-                    'cloud_id_course': course_details['cloud_id'],'status':'available','created_at':utils.get_current_date()}
+                    'cloud_id_course': course_details['cloud_id'],'status':[],'created_at':utils.get_current_date()}
         
         return firebase_token
     else:
@@ -101,7 +102,19 @@ def get_course_data():
             'place_proposal', 'start_date', 'devices_proposal', 'tech_resources', 'prior_knowledge',
             'status', 'signed_concent', 'updated_at', 'notification'
         ])
-    
+
+@st.cache_data(ttl=900, show_spinner=False)
+def get_attendance(cloud_id_course):
+    try:
+        Conn = connector()
+        course_requests = Conn.query_collection('tokens_storage', [('cloud_id_course', '==', cloud_id_course)])
+        courses_data = [doc.data for doc in course_requests]
+        dataset = pd.DataFrame(courses_data)
+        emails_attendance = list({email for item in dataset['status'].values for email in item})
+        return emails_attendance
+    except Exception as e:
+        st.error(f"Error fetching course data: {str(e)}")
+        return []
 
 @st.cache_data(ttl=900, show_spinner=False)
 def get_intake_data() -> pd.DataFrame:
@@ -112,7 +125,7 @@ def get_intake_data() -> pd.DataFrame:
         pd.DataFrame: Filtered user data or empty DataFrame if no data found.
     """
     required_columns = [
-        'first_name', 'last_name', 'dob', 'gender', 'nationality', 'is_ethnic', 
+        'first_name', 'last_name', 'dob', 'gender', 'nationality', 'is_ethnic','email',
         'city_residence', 'guardian_fullname', 'guardian_relationship', 'emergency_phone', 
         'education_level', 'user_role', 'strengths', 'weaknesses', 'disability', 
         'ethnic_affiliation', 'skills', 'how_to_learn','cloud_id'
@@ -277,7 +290,6 @@ def calculate_metrics(course: Dict[str, int], enrolled: List[int]) -> Dict[str, 
 def display_dashboard(course: Dict[str, int], enrolled: List[int], utils: CategoryUtils):
     """Display friendly course enrollment dashboard with highlighted key information."""
     
-    
     metrics = calculate_metrics(course, enrolled)
     start_date = parse_date(course['start_date'])
     days_until_start = (start_date - datetime.now()).days
@@ -314,8 +326,14 @@ def display_dashboard(course: Dict[str, int], enrolled: List[int], utils: Catego
         st.error(f"!Seguro lo logramos! faltan :red-background[**{math.ceil(metrics['min']*0.85) - metrics['total']} participantes**] para alcanzar el mínimo requerido.")
 
 
+def update_attendance():
+    get_attendance.clear()
+    st.rerun()
+
 def intake_dashboard(course_details):
     users_enrolled = get_intake_data()
+    attendace_emails = get_attendance(course_details['cloud_id'])
+    
     utils = CategoryUtils()
     
     users_enrolled['Grupo Edad'] = users_enrolled['dob'].apply(utils.age_to_category)
@@ -398,11 +416,19 @@ def intake_dashboard(course_details):
 
         st.altair_chart(chart_col4, use_container_width=True)
     
-    st.title("Datos de Emergencia")
+    st.write("Datos de Emergencia/Registro")
     st.info("Aquí encontrarás los datos de contacto y demográficos para gestionar tu curso de forma eficaz y segura.", icon=":material/dataset:")
 
+    if st.button(":material/deployed_code_update: Actualizar Registro",use_container_width=True,type='primary'):
+        update_attendance()
+
     users_enrolled['Nombre'] = users_enrolled['Nombre'] + ' ' + users_enrolled['Apellido']
-    summary = users_enrolled[['Nombre','Rol','Contacto Emergencia','Parentesco','Tel. Emergencia','Div. Funcional','Grupo Étnico']]
+    summary = users_enrolled.copy()
+
+    filter_data = ['Registro','Nombre','Contacto Emergencia','Parentesco','Tel. Emergencia','Div. Funcional','Grupo Étnico']
+    summary['Registro'] = summary['Email'].apply(lambda x: 'Registra' if x in attendace_emails else 'No registra')
+    summary = summary[filter_data]
+
     st.dataframe(summary.dropna(), hide_index=True, use_container_width=True)
 
 def token_attendance(course_details):
@@ -426,30 +452,29 @@ def token_attendance(course_details):
     if 'token' in st.session_state:
         st.success(st.session_state.token, icon=":material/barcode:")
 
-    # if course_details['start_date'] == utils.get_current_date():
+    if course_details['start_date'] == utils.get_current_date():
     
-    if st.button(':material/qr_code_2: Generar Token', type='secondary', use_container_width=True):
+        if st.button(':material/qr_code_2: Generar Token', type='secondary', use_container_width=True):
 
-        if 'token_code' in st.session_state:
-            st.error(f"Token generado :red-background[**{st.session_state.token_code}**], no es necesario generar más tokens para esta sesión.", icon=":material/do_not_disturb_on:")
-        else:
-            firebase_token = tokens_generator(course_details)
-            time.sleep(2)
-            st.session_state.token_code = firebase_token['token']
-            st.session_state.token = f"""
-            Token generado, :green-background[**{firebase_token['token']}**],
-            válido solo para el curso :green[**{course_details['course_name']}**],
-            presentado el :green[**{utils.format_date(course_details['start_date'],course_details['city_proposal'])}**]
-            """
-            add_firebase(firebase_token)
-            time.sleep(2)
-        
+            if 'token_code' in st.session_state:
+                st.error(f"Token generado :red-background[**{st.session_state.token_code}**], no es necesario generar más tokens para esta sesión.", icon=":material/do_not_disturb_on:")
+            else:
+                firebase_token = tokens_generator(course_details)
+                time.sleep(2)
+                st.session_state.token_code = firebase_token['token']
+                st.session_state.token = f"""
+                Token generado, :green-background[**{firebase_token['token']}**],
+                válido solo para el curso :green[**{course_details['course_name']}**],
+                presentado el :green[**{utils.format_date(course_details['start_date'],course_details['city_proposal'])}**]
+                """
+                add_firebase(firebase_token)
+                time.sleep(2)
 
-    # else:
-    #     st.warning(f"""
-    #     La generación del token solo está disponible el :orange[**{utils.format_date(course_details['start_date'])}**]
-    #     No es posible generar el token en otra fecha.
-    #     """, icon=":material/event:")
+    else:
+        st.warning(f"""
+        La generación del token solo está disponible el :orange[**{utils.format_date(course_details['start_date'])}**]
+        No es posible generar el token en otra fecha.
+        """, icon=":material/event:")
 
 def toggle_view(view_name):
     for view in ['course_details', 'course_dashboard', 'course_token']:

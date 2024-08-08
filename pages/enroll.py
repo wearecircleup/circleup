@@ -198,12 +198,21 @@ def enrollment_notice(data: Dict, selected_course):
     data['cloud_id'] = cloud_id 
     sheet_entry = [list(data.values())]
 
-    with st.spinner("Guardando tu inscripción...\n\n"
-                    "1. Vas a recibir un email en ~5min.\n"
-                    "2. Si no recibes el email, escribe a wearecircleup@gmail.com\n"
-                    "3. Si quieres donar o ayudar, escribe a +57 3046714626"):
+    with st.spinner("Guardando tu inscripción..."):
         
-        time.sleep(2)
+        messages = ['Vas a recibir un email en :blue-background[~5min.]',
+            'Si no lo recibes, :blue-background[escribenos a wearecircleup@gmail.com.]',
+            'Si quieres donar o ayudar, :blue-background[escribe al +57 3046714626.]']
+
+        message_container = st.empty()
+
+        for msg in messages:
+            message_container.info(msg,icon=":material/auto_awesome_mosaic:")
+            time.sleep(2)
+
+        time.sleep(1)
+        message_container.empty()
+
         send_to_sheets(sheet_entry,'1c_Pjefz-dtpBI2Yq6iPvPnSC5IkkWh7eCmdWaG39tzw','Enrollment')
         time.sleep(2)
         st.balloons()
@@ -217,14 +226,23 @@ def unenrollment_notice(cloud_id: str, selected_course):
     st.session_state.show_manage = False
     update_firebase(cloud_id)
 
-    with st.spinner("Actualizando tu inscripción...\n\n"
-                    "1. Vas a recibir un email en ~5min.\n"
-                    "2. Si no recibes el email, escribe a wearecircleup@gmail.com\n"
-                    "3. Si quieres donar o ayudar, escribe a +57 3046714626"):
+    with st.spinner("Actualizando tu inscripción..."):
         
-        time.sleep(3)
+        messages = ['Vas a recibir un email en :blue-background[~5min.]',
+            'Si no lo recibes, :blue-background[escribenos a wearecircleup@gmail.com.]',
+            'Si quieres donar o ayudar, :blue-background[escribe al +57 3046714626.]']
+
+        message_container = st.empty()
+
+        for msg in messages:
+            message_container.info(msg,icon=":material/auto_awesome_mosaic:")
+            time.sleep(2)
+
+        time.sleep(1)
+        message_container.empty()
+
         update_sheets(cloud_id)
-        time.sleep(3)
+        time.sleep(2)
 
     st.session_state.lock_courses = lock_data('course_name')
 
@@ -447,7 +465,7 @@ def parental_logs(link_auth=None):
 
 def main():
     try:
-        st.warning(":orange[**Duración Cursos**] :orange[**2 horas maximo**], sesión exclusiva / :orange-background[Cupos limitados]", icon=":material/attach_file:")
+        st.warning("La duración de los cursos es de :orange[2 horas maximo], :orange-background[sesión exclusiva] / :orange-background[Cupos limitados]", icon=":material/attach_file:")
 
         if 'confirmation_message' in st.session_state:
             st.success(st.session_state.confirmation_message, icon=":material/data_check:")
