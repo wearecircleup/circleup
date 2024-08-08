@@ -24,6 +24,7 @@ def authenticated_menu():
         st.sidebar.page_link("app.py", label="Inicio", icon=":material/home:")
         st.sidebar.page_link("pages/profile.py", label="Perfil", icon=":material/person:")
         st.sidebar.page_link("pages/enroll.py", label="Explora Cursos", icon=":material/calendar_today:")
+        st.sidebar.page_link("pages/attendance.py", label="Asistencia", icon=":material/edit_note:")
 
         if st.session_state.user_auth.user_role == 'Learner':
             st.sidebar.page_link("pages/volunteering.py", label="Ser Voluntario", icon=":material/volunteer_activism:")
@@ -31,6 +32,8 @@ def authenticated_menu():
         if st.session_state.user_auth.user_role in ['Volunteer','Admin']:
             st.sidebar.info(":blue[**Nomad Side**]")
             st.sidebar.page_link("pages/dashboard.py", label="Propuestas", icon=":material/groups:")
+
+            
 
         if st.session_state.user_auth.user_role == 'Admin':
             st.sidebar.info(":blue[**Sentinel Side**]")

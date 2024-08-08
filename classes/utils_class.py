@@ -29,7 +29,7 @@ class CategoryUtils:
 
 
     @staticmethod
-    def format_date(fecha_str, city):
+    def format_date(fecha_str, city=''):
         dias_semana = {
             0: "Lunes",
             1: "Martes",
@@ -68,8 +68,11 @@ class CategoryUtils:
         
         dia = fecha_colombia.day
         año = fecha_colombia.year
+        
+        if city != '':
+            city = ', ' + city
 
-        return f"{dia_semana}, {dia} de {mes} de {año}, {city}"
+        return f"{dia_semana}, {dia} de {mes} de {año}{city}"
         
     @staticmethod
     def parental_review(birth_date_str: str) -> str:
@@ -145,7 +148,7 @@ class CategoryUtils:
             figure, figcaption, footer, header, hgroup, 
             menu, nav, output, ruby, section, summary,
             time, mark, audio, video {
-                font-size: 1.1rem;
+                font-size: 1.05rem;
             }
 
             /* Encabezados */
@@ -155,7 +158,7 @@ class CategoryUtils:
 
             /* Elementos de texto específicos */
             .stAlert, .stInfo, .stSuccess, .stWarning, .stError {
-                font-size: 1.1rem;
+                font-size: 1.5rem;
             }
 
             /* Elementos de lista y tabla */

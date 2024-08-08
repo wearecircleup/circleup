@@ -129,11 +129,13 @@ def connector():
 def show_navigation():
     pages = {
         "Perfil": "pages/profile.py",
-        "Explora Cursos": "pages/enroll.py"
+        "Explora Cursos": "pages/enroll.py",
+        "Asistencia": "pages/attendance.py"
     }
-    
+
     if st.session_state.user_auth.user_role == 'Learner':
         pages["Ser Voluntario"] = "pages/volunteering.py"
+
     
     if st.session_state.user_auth.user_role in ['Volunteer', 'Admin']:
         pages["Propuestas"] = "pages/dashboard.py"

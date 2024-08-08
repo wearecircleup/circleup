@@ -5,6 +5,10 @@ from google.cloud import firestore
 import pandas as pd
 import time
 import altair as alt
+from datetime import datetime, timedelta
+import math
+import random
+import string
 
 from menu import menu
 from classes.firestore_class import Firestore
@@ -52,6 +56,32 @@ def connector():
     db = firestore.Client.from_service_account_info(key_firestore)
     Conn = Firestore(db)
     return Conn
+
+
+@st.cache_data(ttl=900, show_spinner=False)
+def add_firebase(data: Dict):
+    try:
+        token_collection = connector().add_document('tokens_storage',data,data['cloud_id'])
+        return True
+    except Exception as e:
+        return False
+
+@st.cache_data(ttl=900, show_spinner=False)
+def tokens_generator(course_details):
+
+    course_id = course_details['cloud_id']
+    if course_id != '':
+        utils = CategoryUtils()
+        characters = string.ascii_letters + string.digits
+        token = ''.join(random.choice(characters) for _ in range(5)).lower()
+        token_course = course_id + token +  utils.get_current_date().replace('-','')
+        
+        firebase_token = {'cloud_id': token_course,'token': token, 'cloud_id_volunteer':course_details['cloud_id_volunteer'],
+                    'cloud_id_course': course_details['cloud_id'],'status':'available','created_at':utils.get_current_date()}
+        
+        return firebase_token
+    else:
+        return None
 
 @st.cache_data(ttl=900, show_spinner=False)
 def get_course_data():
@@ -128,7 +158,6 @@ def get_intake_data() -> pd.DataFrame:
         st.error(f"Error fetching intake data: {str(e)}")
         return pd.DataFrame(columns=required_columns)
 
-
 def display_course_summary(course_details: Dict[str, Any]) -> None:
     """Display a summary of the selected course."""
     st.info(
@@ -137,7 +166,7 @@ def display_course_summary(course_details: Dict[str, Any]) -> None:
         f":blue[**{course_details['course_categories']}**], dirigido a participantes de "
         f":blue[**{course_details['allowed_age']}**] años. La capacidad está establecida entre "
         f":blue[**{course_details['min_audience']}**] y :blue[**{course_details['max_audience']}**] "
-        f"asistentes, con una expectativa de asistencia mínima del 50%. El curso se confirmará al "
+        f"asistentes, con una expectativa de asistencia mínima del 85%. El curso se confirmará al "
         f"alcanzar :blue[**{course_details['min_audience']}**] inscripciones.",
         icon=':material/summarize:'
     )
@@ -171,51 +200,53 @@ def display_course_requirements(course_details: Dict[str, Any]) -> None:
     st.write(
         f":blue-background[**Requisitos de participación**] Para este curso, los participantes deberán contar con {devices_info}. "
         f"En cuanto a recursos técnicos, se requiere {tech_resources_info}. {prior_knowledge_info}",
-        icon=':material/clipboard-list:'
+        icon=':material/attach_file:'
     )
 
 def volunteer_dashboard() -> None:
     """Main function to display the volunteer dashboard."""
 
-    st.title("Gestión de Propuestas de Voluntariado Académico")
-    st.info(
+    utils = CategoryUtils()
+
+    st.title("Gestión de Propuestas Voluntariado Académico")
+    st.write(
         "Bienvenido a tu panel de control. Aquí podrás revisar el estado de tus propuestas, "
         "gestionar la asistencia de los participantes y marcar la finalización de tus cursos. "
-        "Selecciona una propuesta para ver detalles y estadísticas.",
-        icon=":material/stadia_controller:"
+        "Selecciona una propuesta para ver detalles y estadísticas."
     )
 
+    st.info("""
+    Aquí tienes datos confidenciales de tus participantes para mejorar tu experiencia educativa. Recuerda que esta información está protegida por nuestra [Política de Protección de Datos](https://drive.google.com/file/d/18Vu3lsHP0_UszWxSr8uez4W7P3_FWKfe/view). :blue[**Úsala exclusivamente para el desarrollo del curso y no la compartas con terceros.**]
+    """, icon=":material/admin_panel_settings:")
+
     status_options: List[str] = ["Approved", "Denied", "Pending"]
-    selected_status: Optional[str] = st.selectbox("Selecciona el estado de la propuesta:", status_options, index=None)
+    selected_status: Optional[str] = st.selectbox("Selecciona el estado del curso:", status_options, index=None)
     
     if selected_status is None:
-        st.info("Selecciona alguno de los estados :blue-background[**Approved, Denied, Pending**]", icon=":material/notifications:")
+        st.info("Selecciona uno de los estados: :blue-background[**Aprobado, Rechazado, Pendiente**]", icon=":material/notifications:")
         return
 
     volunteer_proposals = get_course_data()
     proposals = volunteer_proposals[volunteer_proposals['status'] == selected_status]
 
     if proposals.empty:
-        st.warning(f"No hay solicitudes con estado :orange[**{selected_status}.**]", icon=":material/notifications:")
+        st.warning(f"No se encontraron cursos con estado :orange[**{selected_status}**]", icon=":material/notifications:")
         return
 
     course_names = set(proposals['course_name'].values)
-    selected_course: Optional[str] = st.selectbox("Seleccione una solicitud para revisar:", course_names, index=None)
+    selected_course: Optional[str] = st.selectbox("Selecciona un curso para revisar:", course_names, index=None)
 
     if selected_course is None:
-        st.info(f"Selecciona alguno de los cursos disponibles en el estado :blue-background[**{selected_status}.**]", icon=":material/notifications:")
+        st.info(f"Selecciona uno de los cursos disponibles en el estado :blue-background[**{selected_status}**]", icon=":material/notifications:")
         return
 
     courses = proposals[proposals['course_name'] == selected_course]
 
     if courses.empty:
-        st.warning(f"No hay cursos como :orange[**{selected_course}.**]", icon=":material/notifications:")
+        st.warning(f"No se encontraron cursos como :orange[**{selected_course}**]", icon=":material/notifications:")
         return
 
     course_details = courses.to_dict(orient='records')[0]
-    # display_course_summary(course_details)
-    # display_course_dates(course_details, utils)
-    # display_course_requirements(course_details)
 
     return course_details
 
@@ -226,34 +257,77 @@ def expand_rows(row):
         'Grupo Edad': [row['Grupo Edad']] * len(estilos)
     })
 
+def parse_date(date_string: str) -> datetime:
+    """Parse date string to datetime object."""
+    return datetime.strptime(date_string, "%d-%m-%Y")
+
+def calculate_metrics(course: Dict[str, int], enrolled: List[int]) -> Dict[str, int]:
+    """Calculate course metrics."""
+    total = len(enrolled)
+    target = max(course['min_audience'] * 1.2, course['min_audience'] * 0.85)
+    return {
+        'min': course['min_audience'],
+        'max': course['max_audience'],
+        'total': total,
+        'target': int(target),
+        'remaining': max(0, int(target) - total)
+    }
+
+
+def display_dashboard(course: Dict[str, int], enrolled: List[int], utils: CategoryUtils):
+    """Display friendly course enrollment dashboard with highlighted key information."""
+    
+    
+    metrics = calculate_metrics(course, enrolled)
+    start_date = parse_date(course['start_date'])
+    days_until_start = (start_date - datetime.now()).days
+    cancel_date = start_date - timedelta(days=2)
+    min_required = math.ceil(metrics['min']*0.85)
+
+    if days_until_start > 0:
+        st.info(f"""
+            El curso comienza el :blue[**{utils.format_date(start_date.strftime('%d-%m-%Y')).lower()}**].
+            Tenemos hasta el :blue[**{utils.format_date(cancel_date.strftime('%d-%m-%Y')).lower()}**], es decir, :blue[**{days_until_start - 2} días**]
+            para alcanzar un mínimo de :blue[**{metrics['min']} participantes**] o al menos :blue[**{min_required} personas**], ¡pero seguro lo logramos!
+            Ya vamos :blue[**{metrics['total']} inscritos**]. Solo faltarían al menos :blue[**{max(0, min_required - metrics['total'])} personas más**]. ¡Ánimo, estamos cerca!
+            Recuerda, si no alcanzamos este número, el curso podría ser cancelado.
+        """,icon=":material/battery_charging_50: ")
+    elif days_until_start == 0:
+        st.success("¡Fantástico! El curso comienza :blue[hoy]. ¡Esperamos que todos estén listos para esta gran aventura de aprendizaje!")
+    else:
+        st.info(f"El curso ya está en marcha desde hace :blue[{abs(days_until_start)} días]. ¡Esperamos que estén disfrutando de esta experiencia!")
+
+    progress = min(metrics['total'] / metrics['target'], 1.0)
+    st.progress(progress)
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Inscritos", metrics['total'], f"{metrics['total'] - math.ceil(metrics['min']*0.85)} Requeridos")
+    col2.metric("Objetivo Ideal", metrics['target'], 
+                f"{metrics['remaining']} Faltantes" if metrics['remaining'] > 0 else "¡Logrado!")
+    col3.metric("Capacidad Máxima", metrics['max'], f"{metrics['max'] - metrics['total']} Disponibles")
+
+    if metrics['total'] >= metrics['target']:
+        st.success(f"¡Excelente trabajo! Hemos alcanzado y superado nuestro objetivo con :green[**{metrics['total']} participantes inscritos.**]")
+    elif metrics['total'] >= metrics['min']:
+        st.warning(f"¡Vamos por buen camino! Solo faltan :orange[**{metrics['remaining']} participantes**] para alcanzar nuestro objetivo ideal.")
+    else:
+        st.error(f"!Seguro lo logramos! faltan :red-background[**{math.ceil(metrics['min']*0.85) - metrics['total']} participantes**] para alcanzar el mínimo requerido.")
+
+
 def intake_dashboard(course_details):
     users_enrolled = get_intake_data()
     utils = CategoryUtils()
     
     users_enrolled['Grupo Edad'] = users_enrolled['dob'].apply(utils.age_to_category)
     
-    st.title("Dashboard de Inscripción al Curso")
-    
-    st.info("""
-    Este dashboard presenta información agregada sobre los participantes inscritos en el curso. 
-    Estos datos son confidenciales y están protegidos por la [Política de Protección de Datos de Circle Up Community.](https://drive.google.com/file/d/18Vu3lsHP0_UszWxSr8uez4W7P3_FWKfe/view) 
-    Su uso está estrictamente limitado al desarrollo y mejora de la experiencia educativa. 
-    :blue[**No comparta esta información con terceros.**]
-    """)
-    
-    total_enrolled = len(users_enrolled)
-    min_audience = course_details['min_audience']
-    max_audience = course_details['max_audience']
-    progress = (total_enrolled - min_audience) / (max_audience - min_audience)
+    display_dashboard(course_details, users_enrolled,utils)
 
-    st.info(f":blue[**Inscritos**] {total_enrolled}/{max_audience} ({progress:.1%} del objetivo)")
-    
     col1, col2 = st.columns(2)
     
     with col1:
 
-        st.title("Distribución Edad/Género")
-        st.info("Composición demográfica del grupo, permitiendo identificar la diversidad etaria y de género para adaptar el contenido del curso.")
+        st.title("Distribución Edad")
+        st.info("Descubre la diversidad de tu grupo y ajusta tu contenido para conectar mejor con todos tus participantes.", icon=":material/fingerprint:")
 
         age_gender = users_enrolled.groupby(['Grupo Edad', 'Género']).size().reset_index(name='count')
         total_count_ag = age_gender['count'].sum()
@@ -264,14 +338,14 @@ def intake_dashboard(course_details):
             y='Porcentaje (%):Q',
             color='Grupo Edad:N',
             tooltip=['Grupo Edad', 'Género', alt.Tooltip('Porcentaje (%):Q', format='.1f')]
-        ).properties(title='Distribución de Edades/Género',height=350)
+        ).properties(height=350)
 
         st.altair_chart(chart_col1, use_container_width=True)
 
     with col2:
         st.title("Distribución Ciudad")
-        st.info("La diversidad geográfica de los participantes ayuda a considerar diferentes contextos regionales en el diseño del curso.")
-
+        st.info("Conoce la diversidad geográfica de tus participantes y ajustalo según las perspectivas de diferentes regiones.", icon=":material/south_america:")
+        
         city_gender = users_enrolled.groupby(['Ciudad', 'Género']).size().reset_index(name='count')
         total_count_cg = city_gender['count'].sum()
         city_gender['Porcentaje (%)'] = (city_gender['count'] / total_count_cg * 100).round(2)
@@ -281,7 +355,7 @@ def intake_dashboard(course_details):
             y='Porcentaje (%):Q',
             color='Ciudad:N',
             tooltip=['Ciudad', 'Género', alt.Tooltip('Porcentaje (%):Q', format='.1f')]
-        ).properties(title='Distribución de Género/Ciudad',height=350)
+        ).properties(height=350)
 
         st.altair_chart(chart_col2, use_container_width=True)
     
@@ -290,8 +364,8 @@ def intake_dashboard(course_details):
     with col3:
 
         st.title("Nivel Educativo")
-        st.info("El análisis de los niveles educativos permite ajustar la complejidad del contenido del curso para satisfacer las necesidades de todos los participantes.")
-
+        st.info("Adapta el contenido de tu curso según la formación de tus participantes para un aprendizaje efectivo.", icon=":material/fit_screen:")
+        
         edu_gender = users_enrolled.groupby(['Nivel Educativo', 'Género']).size().reset_index(name='count')
         total_count_eg = edu_gender['count'].sum()
         edu_gender['Porcentaje (%)'] = (edu_gender['count'] / total_count_eg * 100).round(2)
@@ -301,15 +375,15 @@ def intake_dashboard(course_details):
             x='Porcentaje (%):Q',
             color='Nivel Educativo:N',
             tooltip=['Nivel Educativo', 'Género', alt.Tooltip('Porcentaje (%):Q', format='.1f')]
-        ).properties(title='Distribución de Nivel Educativo / Género',height=300)
+        ).properties(height=300)
 
         st.altair_chart(chart_col3, use_container_width=True)
     
     with col4:
 
         st.title("Estilos Aprendizaje")
-        st.info("Conocer los estilos de aprendizaje predominantes facilita la adaptación de las metodologías de enseñanza para maximizar la efectividad del curso.")
-
+        st.info("Conoce cómo aprenden tus estudiantes y optimiza tu enseñanza para potenciar el aprendizaje en el curso.", icon=":material/local_library:")
+        
         expanded_df = pd.concat([expand_rows(row) for _, row in users_enrolled[['Estilo Aprendizaje', 'Grupo Edad']].iterrows()], ignore_index=True)
         learn_gender = expanded_df.groupby(['Estilo Aprendizaje', 'Grupo Edad']).size().reset_index(name='count')
         total_count_lg = learn_gender['count'].sum()
@@ -320,26 +394,102 @@ def intake_dashboard(course_details):
             x='Porcentaje (%):Q',
             color='Estilo Aprendizaje:N',
             tooltip=['Estilo Aprendizaje', 'Grupo Edad', alt.Tooltip('Porcentaje (%):Q', format='.1f')]
-        ).properties(title='Distribución de Edades / Grupo Edad',height=300)
+        ).properties(height=300)
 
         st.altair_chart(chart_col4, use_container_width=True)
     
-    st.title("Resumen de Participantes")
-    st.info("Esta tabla muestra información de contacto de emergencia y datos demográficos de los participantes, crucial para la gestión segura y eficiente del curso.")
-    
+    st.title("Datos de Emergencia")
+    st.info("Aquí encontrarás los datos de contacto y demográficos para gestionar tu curso de forma eficaz y segura.", icon=":material/dataset:")
+
     users_enrolled['Nombre'] = users_enrolled['Nombre'] + ' ' + users_enrolled['Apellido']
     summary = users_enrolled[['Nombre','Rol','Contacto Emergencia','Parentesco','Tel. Emergencia','Div. Funcional','Grupo Étnico']]
     st.dataframe(summary.dropna(), hide_index=True, use_container_width=True)
 
+def token_attendance(course_details):
+    
+    firebase_token = None
+
+    st.info("""
+    Aquí puedes :blue[**registrar la asistencia**] de los participantes. Es crucial hacerlo correctamente, 
+    ya que al finalizar el curso enviaremos :blue[**memorias**] y una :blue[**certificación simbólica**] solo a los asistentes reales. 
+    Un registro preciso asegura que todos los participantes reciban los materiales correspondientes y evita envíos incorrectos.
+    """, icon=":material/contextual_token:")
+    
+    st.write("""
+    1. La :blue[**asistencia**] se registra con un :blue[**token único**] generado 5 minutos antes de iniciar o finalizar la clase. Es crucial crear solo un token por clase cuando todos estén listos, :blue[**sin generarlo anticipadamente**].
+    2. Los participantes deben seleccionar la clase correcta en la sección de asistencia e :blue[**ingresar el token en minúsculas**]. Tras confirmar, recibirán una validación inmediata. Sus :blue[**certificados y memorias**] se enviarán en las siguientes 24 horas.
+    """)
+
+    
+    utils = CategoryUtils()
+
+    if 'token' in st.session_state:
+        st.success(st.session_state.token, icon=":material/barcode:")
+
+    # if course_details['start_date'] == utils.get_current_date():
+    
+    if st.button(':material/qr_code_2: Generar Token', type='secondary', use_container_width=True):
+
+        if 'token_code' in st.session_state:
+            st.error(f"Token generado :red-background[**{st.session_state.token_code}**], no es necesario generar más tokens para esta sesión.", icon=":material/do_not_disturb_on:")
+        else:
+            firebase_token = tokens_generator(course_details)
+            time.sleep(2)
+            st.session_state.token_code = firebase_token['token']
+            st.session_state.token = f"""
+            Token generado, :green-background[**{firebase_token['token']}**],
+            válido solo para el curso :green[**{course_details['course_name']}**],
+            presentado el :green[**{utils.format_date(course_details['start_date'],course_details['city_proposal'])}**]
+            """
+            add_firebase(firebase_token)
+            time.sleep(2)
+        
+
+    # else:
+    #     st.warning(f"""
+    #     La generación del token solo está disponible el :orange[**{utils.format_date(course_details['start_date'])}**]
+    #     No es posible generar el token en otra fecha.
+    #     """, icon=":material/event:")
+
+def toggle_view(view_name):
+    for view in ['course_details', 'course_dashboard', 'course_token']:
+        st.session_state[f'show_{view}'] = (view == view_name)
+
 def main() -> None:
     course_details = volunteer_dashboard()
+    st.divider()
+    col1, col2, col3 = st.columns(3)
+    
+    if col1.button(':material/dashboard: Detalles Propuesta', use_container_width=True, type='primary'):
+        toggle_view('course_details')
+    
+    if col2.button(':material/analytics: Analítica Inscritos', use_container_width=True, type='primary'):
+        toggle_view('course_dashboard')
+    
+    if col3.button(':material/token: Generar Tokens', use_container_width=True, type='primary'):
+        toggle_view('course_token')
+    
     if course_details:
-        intake_dashboard(course_details)
-    menu()
+        if st.session_state.get('show_course_details', False):
+            display_course_summary(course_details)
+            display_course_dates(course_details, CategoryUtils())
+            display_course_requirements(course_details)
+        
+        if st.session_state.get('show_course_dashboard', False):
+            intake_dashboard(course_details)
+        
+        if st.session_state.get('show_course_token', False):
+            token_attendance(course_details)
+    else:
+        st.info("Selecciona un curso para visualizar su :blue[**dashboard analítico**] o los :blue[**detalles generales**].", icon=":material/account_tree:")
 
     st.divider()
     if st.button(':material/hiking: Volver al Inicio', type="secondary", help='Volver al menú principal', use_container_width=True):
         st.switch_page('app.py')
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+        menu()
+    except AttributeError:
+        st.switch_page('app.py')

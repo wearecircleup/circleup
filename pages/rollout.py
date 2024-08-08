@@ -156,20 +156,6 @@ def deny_request(connector: Firestore, cloud_id: str):
         st.success(f"Propuesta denegada con éxito.", icon=":material/thumb_down:")
         st.rerun()
 
-# def fix_encoding(text):
-#     replacements = {
-#         "Ã¡": "á", "Ã©": "é", "Ã­": "í", "Ã³": "ó", "Ãº": "ú", "Ã±": "ñ",
-#         "Ã": "Á", "Ã‰": "É", "Ã": "Í", "Ã\"": "Ó", "Ãš": "Ú", "Ã\'": "Ñ",
-#         "Ã¤": "ä", "Ã«": "ë", "Ã¯": "ï", "Ã¶": "ö", "Ã¼": "ü",
-#         "Ã„": "Ä", "Ã‹": "Ë", "Ã": "Ï", "Ã–": "Ö", "Ãœ": "Ü",
-#         "Ã¢": "â", "Ãª": "ê", "Ã®": "î", "Ã´": "ô", "Ã»": "û",
-#         "Ã‚": "Â", "ÃŠ": "Ê", "ÃŽ": "Î", "Ã\"": "Ô", "Ã›": "Û",
-#         "Ã§": "ç", "Ã‡": "Ç",
-#     }
-#     for wrong, correct in replacements.items():
-#         text = text.replace(wrong, correct)
-#     return text
-
 def send_notification_email(connector: Firestore, volunteer_data: dict):
     utils = CategoryUtils()
     email_sender = Email()
@@ -292,10 +278,6 @@ def send_notification_email(connector: Firestore, volunteer_data: dict):
                 </tr>
             </table>
         """
-
-
-    # Use this function before sending the email
-    formatted_date = fix_encoding(formatted_date)
 
     try:
         with st.spinner(":material/send: Enviando email..."):

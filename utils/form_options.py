@@ -41,7 +41,7 @@ modality = ['Virtual', 'Presencial']
 places = [
         # 'Biblioteca Pública (Auditorio)',
         # 'Biblioteca Pública (Sala Robótica)',
-        'Casa Juventud Tocancipá','Virtual'
+        'Casa Juventud','Virtual'
         ]
 
 cities = [

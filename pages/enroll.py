@@ -72,11 +72,11 @@ def get_intake_data():
         Conn = connector()
         course_requests = Conn.query_collection('intake_collection', [
             ('cloud_id_user', '==', st.session_state.user_auth.cloud_id),
-            ('cloud_id_volunteer', '!=', st.session_state.user_auth.cloud_id),
             ('status', '==', 'Enrolled')
         ])
         courses_data = [doc.data for doc in course_requests]
         dataset = pd.DataFrame(courses_data)
+        dataset = dataset[dataset['cloud_id_volunteer'] != st.session_state.user_auth.cloud_id]
         return dataset
     except Exception as e:
         return pd.DataFrame(columns=[
@@ -84,7 +84,6 @@ def get_intake_data():
             'cloud_id_course', 'first_name', 'last_name', 'email', 'start_date', 'summary',
             'attendance_record', 'email_notice', 'email_reminder', 'status', 'last_change'
         ])
-
 
 def lock_data(field):
     try:
@@ -363,9 +362,9 @@ def entry_registration():
                             utils = CategoryUtils()
 
                             reminder = f"""El curso de {selected_request['course_name']} {
-                                'será en modalidad ' + selected_request['modality_proposal'].lower() 
+                                'será en modalidad ' + selected_request['modality_proposal'].lower() + 'el' + utils.format_date(selected_request['start_date'])
                                 if selected_request['modality_proposal'].lower() == 'virtual' 
-                                else f"se realizará en {selected_request['place_proposal']}, {selected_request['city_proposal']}"
+                                else f"se realizará en {selected_request['place_proposal']}, {selected_request['city_proposal']} el {utils.format_date(selected_request['start_date'])}"
                             }. Está diseñado para participantes de {selected_request['allowed_age']}{
                                 f" y es recomendable que cuentes con {selected_request['prior_knowledge'].lower()}" 
                                 if selected_request['prior_knowledge'].lower() != 'no aplica' 
