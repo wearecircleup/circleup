@@ -1,0 +1,17 @@
+streamlit
+pandas
+numpy
+google-cloud-firestore
+anthropic
+langchain==0.2.6
+langchain-anthropic==0.1.15
+openpyxl
+gspread 
+oauth2client 
+google-auth
+google-auth-oauthlib
+google-api-python-client
+pydantic==1.10.8
+google-cloud-core
+firebase-admin
+python-dotenv

@@ -1,0 +1,20 @@
+
+[theme]
+
+# primaryColor="#25c19f"
+# backgroundColor="#2b3137"
+# secondaryBackgroundColor="#586e75"
+# textColor="#fafafa"
+
+primaryColor="#9D8EC7"
+backgroundColor="#F5F5F5"
+secondaryBackgroundColor="#E8E8E8"
+textColor="#2C2C2C"
+
+# primaryColor="#6C757D"
+# backgroundColor="#F5F5F5"
+# secondaryBackgroundColor="#E8E8E8"
+# textColor="#2C2C2C"
+
+[client]
+showSidebarNavigation = false
