@@ -1,7 +1,15 @@
+import streamlit as st
+
+st.set_page_config(
+    page_title="Circle Up",
+    page_icon="🟣",
+    layout="wide",
+    initial_sidebar_state="collapsed"
+)
+
 from datetime import datetime
 import time
 import json
-import streamlit as st
 from google.cloud import firestore
 from classes.users_class import Users
 from classes.firestore_class import Firestore
@@ -24,12 +32,6 @@ from dotenv import load_dotenv
 
 load_dotenv(encoding='utf-8')
 
-st.set_page_config(
-    page_title="Circle Up",
-    page_icon="🟣",
-    layout="wide",
-    initial_sidebar_state="collapsed"
-)
 
 from menu import menu
 
@@ -99,14 +101,10 @@ if 'email_account' not in st.session_state:
 
 @st.cache_resource
 def connector():
-    key_value = os.getenv('FIREBASE_KEY')
-    key_value = key_value.strip().strip("'\"")
-    key_value = key_value.encode().decode('unicode_escape')
-    key_firestore = json.loads(key_value)
+    key_firestore = json.loads(st.secrets["FIREBASE_KEY"])
     db = firestore.Client.from_service_account_info(key_firestore)
     Conn = Firestore(db)
     return Conn
-
 
 def show_navigation():
     pages = {
@@ -433,7 +431,7 @@ def main():
 
         col1, col2, col3  = st.columns(3)
         with col1:
-            if st.button(':material/touch_app: Únete/Regístrate', type="secondary", help='Registro', use_container_width=True):
+            if st.button(':material/touch_app: Crear Cuenta', type="primary", help='Registro', use_container_width=True):
                 st.switch_page('pages/signup.py')
         with col2:
             if st.button(':material/arrow_drop_down_circle: ¿Qué es Community?', type="secondary", use_container_width=True):
